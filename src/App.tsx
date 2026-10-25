@@ -11,7 +11,7 @@ import type { DriverProfile, Mission, MissionEvent, MissionMessage } from './typ
 import { LogoSlot } from './components/LogoSlot'
 import { ActionButton, NetworkBadge, StatusPill } from './components/ui'
 import { usePwaInstall } from './hooks/usePwaInstall'
-import { useCallback, useEffect, useState } from 'react'
+
 
 
 type Screen = 'home' | 'missions' | 'mission' | 'scanner' | 'messages' | 'settings'
