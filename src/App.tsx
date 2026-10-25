@@ -12,7 +12,6 @@ import { LogoSlot } from './components/LogoSlot'
 import { ActionButton, NetworkBadge, StatusPill } from './components/ui'
 import { usePwaInstall } from './hooks/usePwaInstall'
 
-
 type Screen = 'home' | 'missions' | 'mission' | 'scanner' | 'messages' | 'settings'
 
 const timeFormatter = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
@@ -31,10 +30,12 @@ function stopLabel(type: string) {
   if (type === 'pickup') return 'Prise en charge'
   if (type === 'delivery') return 'Livraison'
   if (type === 'terminal') return 'Terminal'
+  if (type === 'port') return 'Terminal de sortie'
+  if (type === 'return') return "Terminal d'entrée"
+  if (type === 'depot') return 'Dépôt'
   return 'Étape'
 }
 
-// --- 1. LOGIN VIEW (Chrome fix) ---
 function LoginView({ onLogin }: { onLogin: (code: string, pin: string) => Promise<void> }) {
   const [code, setCode] = useState('')
   const [pin, setPin] = useState('')
@@ -83,7 +84,6 @@ function PageTitle({ title, subtitle, onBack }: { title: string; subtitle?: stri
 }
 
 function MissionCard({ mission, onOpen }: { mission: Mission; onOpen: () => void }) {
-  // 🔥 CORRECTION ICI : On utilise la colonne exacte de Supabase
   const displayNumber = (mission as any).dossier_number || mission.mission_number;
   
   return <button onClick={onOpen} className="w-full rounded-2xl bg-white p-5 text-left shadow-card transition hover:-translate-y-0.5 hover:shadow-lg">
@@ -93,18 +93,13 @@ function MissionCard({ mission, onOpen }: { mission: Mission; onOpen: () => void
 }
 
 function HomeScreen({ missions, messages, onNavigate, onMission }: { missions: Mission[]; messages: MissionMessage[]; onNavigate: (screen: Screen) => void; onMission: (mission: Mission) => void }) {
-  const { canInstall, isIOS, promptInstall } = usePwaInstall()
+  const { canInstall, promptInstall } = usePwaInstall()
   const active = missions.filter((m) => ['planned', 'in_progress'].includes(m.status))
   const unread = messages.filter((m) => !m.read_at && m.sender_role === 'dispatcher').length
   
   return <main className="space-y-6">
-    <section className="rounded-3xl bg-gradient-to-br from-bassin to-bassin-dark p-5 text-white shadow-card">
-      <p className="text-sm font-bold uppercase tracking-[0.18em] text-white/70">Aujourd’hui</p>
-      <h1 className="mt-2 text-3xl font-extrabold tracking-tight">On roule avec du concret.</h1>
-      <p className="mt-2 max-w-md text-base leading-7 text-white/80">Vos missions, vos preuves terrain et vos échanges, au même endroit.</p>
-    </section>
-
-    {/* 🔥 BANNIÈRE D'INSTALLATION ICI 🔥 */}
+    <section className="rounded-3xl bg-gradient-to-br from-bassin to-bassin-dark p-5 text-white shadow-card"><p className="text-sm font-bold uppercase tracking-[0.18em] text-white/70">Aujourd’hui</p><h1 className="mt-2 text-3xl font-extrabold tracking-tight">On roule avec du concret.</h1><p className="mt-2 max-w-md text-base leading-7 text-white/80">Vos missions, vos preuves terrain et vos échanges, au même endroit.</p></section>
+    
     {canInstall && (
       <button onClick={promptInstall} className="w-full flex items-center justify-between rounded-2xl bg-white p-4 shadow-card border border-bassin/20">
         <div className="text-left">
@@ -113,7 +108,14 @@ function HomeScreen({ missions, messages, onNavigate, onMission }: { missions: M
         </div>
         <span className="rounded-full bg-bassin text-white px-3 py-1 text-xs font-bold">Installer</span>
       </button>
-    )}<section className="grid gap-3" aria-label="Actions principales"><button onClick={() => onNavigate('missions')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-800"><ClipboardList className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Mes missions</span><span className="block text-sm text-slate-600">{active.length} mission{active.length > 1 ? 's' : ''} à traiter</span></span><span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-extrabold text-blue-900">{active.length}</span></button><button onClick={() => onNavigate('scanner')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800"><Camera className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Scanner · Photos</span><span className="block text-sm text-slate-600">Compteur, ticket, CMR</span></span><ChevronRight className="h-6 w-6 text-slate-400" /></button><button onClick={() => onNavigate('messages')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-800"><MessageCircle className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Messages</span><span className="block text-sm text-slate-600">Échangez avec le dispatch</span></span>{unread > 0 && <span className="rounded-full bg-violet-100 px-3 py-1 text-sm font-extrabold text-violet-900">{unread}</span>}</button></section>{active[0] && <section><div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-extrabold text-slate-900">Prochaine priorité</h2><button onClick={() => onNavigate('missions')} className="text-base font-bold text-bassin">Tout voir</button></div><MissionCard mission={active[0]} onOpen={() => onMission(active[0])} /></section>}<div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600"><Info className="mt-0.5 h-5 w-5 shrink-0 text-bassin" /><p>Le suivi est basé uniquement sur vos validations et vos documents. La localisation de votre téléphone n’est jamais demandée.</p></div></main>
+    )}
+
+    <section className="grid gap-3" aria-label="Actions principales">
+      <button onClick={() => onNavigate('missions')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-800"><ClipboardList className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Mes missions</span><span className="block text-sm text-slate-600">{active.length} mission{active.length > 1 ? 's' : ''} à traiter</span></span><span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-extrabold text-blue-900">{active.length}</span></button>
+      <button onClick={() => onNavigate('scanner')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800"><Camera className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Scanner · Photos</span><span className="block text-sm text-slate-600">CMR / Bons de livraison</span></span><ChevronRight className="h-6 w-6 text-slate-400" /></button>
+      <button onClick={() => onNavigate('messages')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-800"><MessageCircle className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Messages</span><span className="block text-sm text-slate-600">Échangez avec le dispatch</span></span>{unread > 0 && <span className="rounded-full bg-violet-100 px-3 py-1 text-sm font-extrabold text-violet-900">{unread}</span>}</button>
+    </section>
+    {active[0] && <section><div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-extrabold text-slate-900">Prochaine priorité</h2><button onClick={() => onNavigate('missions')} className="text-base font-bold text-bassin">Tout voir</button></div><MissionCard mission={active[0]} onOpen={() => onMission(active[0])} /></section>}<div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600"><Info className="mt-0.5 h-5 w-5 shrink-0 text-bassin" /><p>Le suivi est basé uniquement sur vos validations et vos documents. La localisation de votre téléphone n’est jamais demandée.</p></div></main>
 }
 
 function MissionsScreen({ missions, onOpen, onBack }: { missions: Mission[]; onOpen: (mission: Mission) => void; onBack: () => void }) {
@@ -124,7 +126,6 @@ function MissionsScreen({ missions, onOpen, onBack }: { missions: Mission[]; onO
 
 function EmptyState({ text }: { text: string }) { return <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-8 text-center text-base text-slate-500">{text}</div> }
 
-// --- 2. MISSION DETAIL (RDV et Km manuel) ---
 function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Mission; onBack: () => void; onEvent: (eventType: MissionEvent['event_type'], payload: Record<string, unknown>) => Promise<void>; onRefresh: () => void }) {
   const [km, setKm] = useState({ departure: '', arrival: '' })
   const [photoNotice, setPhotoNotice] = useState('')
@@ -144,7 +145,7 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
     setPhotoNotice(`Photo du ticket « ${file.name} » prête pour l'OCR.`); 
   }
 
-  const displayNumber = (mission as any).dossier_number || (mission as any).number || mission.mission_number;
+  const displayNumber = (mission as any).dossier_number || mission.mission_number;
   const clientRef = (mission as any).client_order_reference ? `Réf. client : ${(mission as any).client_order_reference}` : 'Ordre client non renseigné';
 
   const getContainers = () => {
@@ -153,9 +154,17 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
     const c2 = (mission as any).container_number_2;
     const cReturn = (mission as any).container_number_return;
     const sameReturn = (mission as any).same_return_container !== false;
-    if (c1) list.push({ label: (c2 || (!sameReturn && cReturn)) ? 'Aller' : 'Conteneur', num: c1, type: mission.container_type });
-    if (c2) list.push({ label: 'Aller 2', num: c2, type: (mission as any).container_type_2 });
-    if (!sameReturn && cReturn) list.push({ label: 'Retour', num: cReturn, type: (mission as any).container_type_return });
+
+    if (c1) {
+      const label = (c2 || (!sameReturn && cReturn)) ? 'Aller' : 'Conteneur';
+      list.push({ label, num: c1, type: mission.container_type });
+    }
+    if (c2) {
+      list.push({ label: 'Aller 2', num: c2, type: (mission as any).container_type_2 });
+    }
+    if (!sameReturn && cReturn) {
+      list.push({ label: 'Retour', num: cReturn, type: (mission as any).container_type_return });
+    }
     return list;
   };
   const containers = getContainers();
@@ -164,15 +173,12 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
   const opType = (mission as any).operation_type;
   const opLabel = opType === 'round_trip' ? 'Aller-Retour' : opType === 'one_way' ? 'Aller Simple' : 'Triangulaire';
 
-  // 🔥 Fonction pour afficher le bon RDV sur les terminaux
   const getStopInfo = (stop: any) => {
-    if (stop.stop_type === 'port' || stop.stop_type === 'terminal') {
-      const rdv = (mission as any).outbound_appointment_number || (mission as any).return_appointment_number;
-      return rdv ? `RDV : ${rdv}` : 'RDV non renseigné';
-    }
-    if (stop.stop_type === 'return') {
-      const rdv = (mission as any).return_appointment_number;
-      return rdv ? `RDV : ${rdv}` : 'RDV non renseigné';
+    if (['port', 'terminal', 'return'].includes(stop.stop_type)) {
+      const rdv = stop.stop_type === 'return' 
+        ? (mission as any).return_appointment_number 
+        : (mission as any).outbound_appointment_number;
+      return rdv ? `RDV : ${rdv}` : null;
     }
     return stop.planned_at ? `Prévu : ${formatDate(stop.planned_at)}` : null;
   };
@@ -181,8 +187,12 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
     <PageTitle title={displayNumber} subtitle={`${clientRef} · ${formatDate(mission.planned_pickup_at)}`} onBack={onBack} />
     
     <div className="mb-4 flex gap-2">
-      <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${isImport ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'}`}>{isImport ? 'IMPORT' : 'EXPORT'}</span>
-      <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase text-slate-800">{opLabel}</span>
+      <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${isImport ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'}`}>
+        {isImport ? 'IMPORT' : 'EXPORT'}
+      </span>
+      <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase text-slate-800">
+        {opLabel}
+      </span>
     </div>
 
     <section className="rounded-2xl bg-white p-5 shadow-card">
@@ -226,13 +236,12 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
               <p className="text-sm font-bold uppercase tracking-wide text-bassin">{stopLabel(stop.stop_type)}</p>
               <p className="mt-1 text-base font-bold text-slate-900">{stop.location_label_snapshot ?? stop.address_snapshot}</p>
               <p className="mt-1 text-sm leading-6 text-slate-600">{stop.address_snapshot}</p>
-              {/* 🔥 AFFICHAGE RDV ou DATE */}
               {getStopInfo(stop) && <p className="mt-2 text-sm font-semibold text-slate-600">{getStopInfo(stop)}</p>}
               {stop.instructions && <p className="mt-2 rounded-lg bg-amber-50 p-2 text-sm text-amber-900">{stop.instructions}</p>}
             </div>
             <div className="flex shrink-0 gap-2">
-              {stop.phone && <a href={`tel:${stop.phone}`} className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800"><Phone className="h-5 w-5" /></a>}
-              <a href={mapUrl(stop.address_snapshot)} target="_blank" rel="noreferrer" className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-800"><MapPin className="h-5 w-5" /></a>
+              {stop.phone && <a href={`tel:${stop.phone}`} className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800" aria-label={`Appeler ${stop.phone}`}><Phone className="h-5 w-5" /></a>}
+              <a href={mapUrl(stop.address_snapshot)} target="_blank" rel="noreferrer" className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-800" aria-label="Ouvrir l’itinéraire"><MapPin className="h-5 w-5" /></a>
             </div>
           </div>
         </div>)}
@@ -250,10 +259,9 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
       {mission.notes && <p className="mt-5 border-t border-slate-100 pt-4 text-base leading-7 text-slate-700"><strong>Consignes :</strong> {mission.notes}</p>}
     </section>
 
-    {/* 🔥 COMPTEUR KM 100% MANUEL */}
     <section className="mt-4 rounded-2xl bg-white p-5 shadow-card">
       <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900"><span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-bassin text-[10px] font-black text-bassin">km</span>Compteur kilométrique</h2>
-      <p className="mt-1 text-sm leading-6 text-slate-600">Saisissez la valeur relevée sur le tableau de bord.</p>
+      <p className="mt-1 text-sm leading-6 text-slate-600">Saisissez la valeur relevée sur le tableau de bord (sans photo).</p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         {(['departure', 'arrival'] as const).map((kind) => (
           <div key={kind} className="rounded-xl border border-slate-200 p-4">
@@ -277,20 +285,26 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
     {photoNotice && <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-900"><Info className="mt-0.5 h-5 w-5 shrink-0" />{photoNotice}</div>}
   </main>
 }
+
 function DataItem({ label, value }: { label: string; value: string }) { return <div><dt className="text-sm text-slate-500">{label}</dt><dd className="mt-1 break-words font-semibold text-slate-900">{value}</dd></div> }
 
-// --- 4. SCANNER SCREEN (Filtre planned uniquement) ---
 function ScannerScreen({ missions, onBack, onEvent }: { missions: Mission[]; onBack: () => void; onEvent: (eventType: MissionEvent['event_type'], payload: Record<string, unknown>) => Promise<void> }) {
-  // 🔥 FILTRE : Uniquement les missions en cours ou planifiées
-  const activeMissions = missions.filter(m => ['planned', 'in_progress'].includes(m.status))
+  const activeMissions = missions.filter(m => m.status === 'planned')
   const [missionId, setMissionId] = useState(activeMissions[0]?.id ?? '')
   const [notice, setNotice] = useState('')
-  const save = async (event: React.ChangeEvent<HTMLInputElement>, type: string) => { const file = event.target.files?.[0]; if (!file || !missionId) return; await onEvent('document', { mission_id: missionId, document_type: type, original_filename: file.name, size_bytes: file.size, mime_type: file.type }); setNotice(`« ${file.name} » est prêt à être envoyé.`) }
+  
+  const save = async (event: React.ChangeEvent<HTMLInputElement>, type: string) => { 
+    const file = event.target.files?.[0]; 
+    if (!file || !missionId) return; 
+    await onEvent('document', { mission_id: missionId, document_type: type, original_filename: file.name, size_bytes: file.size, mime_type: file.type }); 
+    setNotice(`« ${file.name} » est prêt à être envoyé.`) 
+  }
   
   return <main>
     <PageTitle title="Scanner · Photos" subtitle="Capturez une preuve, même sans réseau." onBack={onBack} />
     <section className="rounded-2xl bg-white p-5 shadow-card">
-      <label className="block"><span className="mb-2 block text-base font-bold text-slate-800">Mission concernée</span>
+      <label className="block">
+        <span className="mb-2 block text-base font-bold text-slate-800">Mission concernée</span>
         <select value={missionId} onChange={(e) => setMissionId(e.target.value)} className="min-h-14 w-full rounded-xl border-2 border-slate-200 bg-white px-4 text-base">
           {activeMissions.map((mission) => {
             const displayNum = (mission as any).dossier_number || mission.mission_number;
@@ -303,16 +317,17 @@ function ScannerScreen({ missions, onBack, onEvent }: { missions: Mission[]; onB
       </div>
     </section>
     {notice && <div className="mt-4 rounded-xl bg-emerald-50 p-4 text-base font-semibold text-emerald-800">{notice}</div>}
-    <div className="mt-5 flex items-start gap-3 rounded-2xl bg-slate-100 p-4 text-sm leading-6 text-slate-600"><CloudOff className="mt-0.5 h-5 w-5 shrink-0 text-bassin" /><p>Les photos sont compressées avant envoi. Si le réseau est coupé, elles restent dans la file de synchronisation de cet appareil.</p></div>
+    <div className="mt-5 flex items-start gap-3 rounded-2xl bg-slate-100 p-4 text-sm leading-6 text-slate-600">
+      <CloudOff className="mt-0.5 h-5 w-5 shrink-0 text-bassin" />
+      <p>Les photos sont compressées avant envoi. Si le réseau est coupé, elles restent dans la file de synchronisation de cet appareil.</p>
+    </div>
   </main>
 }
 
 function ScanButton({ icon, title, subtitle, accept, onChange }: { icon: React.ReactNode; title: string; subtitle: string; accept: string; onChange: (event: React.ChangeEvent<HTMLInputElement>) => void }) { return <label className="flex min-h-20 cursor-pointer items-center gap-4 rounded-2xl border-2 border-slate-200 p-4 transition hover:border-bassin hover:bg-slate-50"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-bassin text-white">{icon}</span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">{title}</span><span className="block text-sm text-slate-600">{subtitle}</span></span><Upload className="h-5 w-5 text-bassin" /><input type="file" accept={accept} capture="environment" className="sr-only" onChange={onChange} /></label> }
 
-// --- 3. MESSAGES SCREEN (Filtre planned uniquement) ---
 function MessagesScreen({ messages, missions, onBack, onSend }: { messages: MissionMessage[]; missions: Mission[]; onBack: () => void; onSend: (missionId: string, body: string) => Promise<void> }) {
-  // 🔥 FILTRE : Uniquement les missions en cours ou planifiées
-  const activeMissions = missions.filter(m => ['planned', 'in_progress'].includes(m.status))
+  const activeMissions = missions.filter(m => m.status === 'planned')
   const [missionId, setMissionId] = useState(activeMissions[0]?.id ?? '')
   const [body, setBody] = useState('')
   const visible = messages.filter((message) => message.mission_id === missionId)
@@ -326,7 +341,7 @@ function MessagesScreen({ messages, missions, onBack, onSend }: { messages: Miss
           const displayNum = (mission as any).dossier_number || mission.mission_number;
           return (
             <option key={mission.id} value={mission.id}>
-              {displayNum} ({mission.status})
+              {displayNum}
             </option>
           )
         })}
@@ -344,7 +359,7 @@ function MessagesScreen({ messages, missions, onBack, onSend }: { messages: Miss
       
       <div className="mt-5 flex items-end gap-2 border-t border-slate-100 pt-4">
         <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={2} placeholder="Ex: Le numéro de conteneur est CCLU 123 456 7..." className="min-h-14 flex-1 resize-none rounded-xl border-2 border-slate-200 p-3 text-base" />
-        <button onClick={send} className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-bassin text-white disabled:opacity-50" disabled={!body.trim()}><Send className="h-6 w-6" /></button>
+        <button onClick={send} className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-bassin text-white disabled:opacity-50" disabled={!body.trim()} aria-label="Envoyer"><Send className="h-6 w-6" /></button>
       </div>
     </section>
   </main>
@@ -375,7 +390,7 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
   return (
     <main>
       <PageTitle title="Paramètres" onBack={onBack} />
-      {/* Carte d'installation */}
+      
       {!isInstalled && (
         <section className="rounded-2xl bg-white p-5 shadow-card mb-4 border border-bassin/20">
           <h2 className="text-lg font-extrabold text-slate-900 mb-2 flex items-center gap-2">
