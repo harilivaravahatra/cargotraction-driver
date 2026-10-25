@@ -10,6 +10,8 @@ import { listPendingEvents, makeClientEventId, queueEvent, removeEvent } from '.
 import type { DriverProfile, Mission, MissionEvent, MissionMessage } from './types'
 import { LogoSlot } from './components/LogoSlot'
 import { ActionButton, NetworkBadge, StatusPill } from './components/ui'
+import { usePwaInstall } from './hooks/usePwaInstall'
+
 
 type Screen = 'home' | 'missions' | 'mission' | 'scanner' | 'messages' | 'settings'
 
@@ -90,9 +92,27 @@ function MissionCard({ mission, onOpen }: { mission: Mission; onOpen: () => void
 }
 
 function HomeScreen({ missions, messages, onNavigate, onMission }: { missions: Mission[]; messages: MissionMessage[]; onNavigate: (screen: Screen) => void; onMission: (mission: Mission) => void }) {
+  const { canInstall, isIOS, promptInstall } = usePwaInstall()
   const active = missions.filter((m) => ['planned', 'in_progress'].includes(m.status))
   const unread = messages.filter((m) => !m.read_at && m.sender_role === 'dispatcher').length
-  return <main className="space-y-6"><section className="rounded-3xl bg-gradient-to-br from-bassin to-bassin-dark p-5 text-white shadow-card"><p className="text-sm font-bold uppercase tracking-[0.18em] text-white/70">Aujourd’hui</p><h1 className="mt-2 text-3xl font-extrabold tracking-tight">On roule avec du concret.</h1><p className="mt-2 max-w-md text-base leading-7 text-white/80">Vos missions, vos preuves terrain et vos échanges, au même endroit.</p></section><section className="grid gap-3" aria-label="Actions principales"><button onClick={() => onNavigate('missions')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-800"><ClipboardList className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Mes missions</span><span className="block text-sm text-slate-600">{active.length} mission{active.length > 1 ? 's' : ''} à traiter</span></span><span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-extrabold text-blue-900">{active.length}</span></button><button onClick={() => onNavigate('scanner')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800"><Camera className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Scanner · Photos</span><span className="block text-sm text-slate-600">Compteur, ticket, CMR</span></span><ChevronRight className="h-6 w-6 text-slate-400" /></button><button onClick={() => onNavigate('messages')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-800"><MessageCircle className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Messages</span><span className="block text-sm text-slate-600">Échangez avec le dispatch</span></span>{unread > 0 && <span className="rounded-full bg-violet-100 px-3 py-1 text-sm font-extrabold text-violet-900">{unread}</span>}</button></section>{active[0] && <section><div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-extrabold text-slate-900">Prochaine priorité</h2><button onClick={() => onNavigate('missions')} className="text-base font-bold text-bassin">Tout voir</button></div><MissionCard mission={active[0]} onOpen={() => onMission(active[0])} /></section>}<div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600"><Info className="mt-0.5 h-5 w-5 shrink-0 text-bassin" /><p>Le suivi est basé uniquement sur vos validations et vos documents. La localisation de votre téléphone n’est jamais demandée.</p></div></main>
+  
+  return <main className="space-y-6">
+    <section className="rounded-3xl bg-gradient-to-br from-bassin to-bassin-dark p-5 text-white shadow-card">
+      <p className="text-sm font-bold uppercase tracking-[0.18em] text-white/70">Aujourd’hui</p>
+      <h1 className="mt-2 text-3xl font-extrabold tracking-tight">On roule avec du concret.</h1>
+      <p className="mt-2 max-w-md text-base leading-7 text-white/80">Vos missions, vos preuves terrain et vos échanges, au même endroit.</p>
+    </section>
+
+    {/* 🔥 BANNIÈRE D'INSTALLATION ICI 🔥 */}
+    {canInstall && (
+      <button onClick={promptInstall} className="w-full flex items-center justify-between rounded-2xl bg-white p-4 shadow-card border border-bassin/20">
+        <div className="text-left">
+          <p className="font-bold text-bassin">Installer l'application</p>
+          <p className="text-xs text-slate-500">Accès plus rapide et mode hors-ligne</p>
+        </div>
+        <span className="rounded-full bg-bassin text-white px-3 py-1 text-xs font-bold">Installer</span>
+      </button>
+    )}<section className="grid gap-3" aria-label="Actions principales"><button onClick={() => onNavigate('missions')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-800"><ClipboardList className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Mes missions</span><span className="block text-sm text-slate-600">{active.length} mission{active.length > 1 ? 's' : ''} à traiter</span></span><span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-extrabold text-blue-900">{active.length}</span></button><button onClick={() => onNavigate('scanner')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800"><Camera className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Scanner · Photos</span><span className="block text-sm text-slate-600">Compteur, ticket, CMR</span></span><ChevronRight className="h-6 w-6 text-slate-400" /></button><button onClick={() => onNavigate('messages')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-800"><MessageCircle className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Messages</span><span className="block text-sm text-slate-600">Échangez avec le dispatch</span></span>{unread > 0 && <span className="rounded-full bg-violet-100 px-3 py-1 text-sm font-extrabold text-violet-900">{unread}</span>}</button></section>{active[0] && <section><div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-extrabold text-slate-900">Prochaine priorité</h2><button onClick={() => onNavigate('missions')} className="text-base font-bold text-bassin">Tout voir</button></div><MissionCard mission={active[0]} onOpen={() => onMission(active[0])} /></section>}<div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600"><Info className="mt-0.5 h-5 w-5 shrink-0 text-bassin" /><p>Le suivi est basé uniquement sur vos validations et vos documents. La localisation de votre téléphone n’est jamais demandée.</p></div></main>
 }
 
 function MissionsScreen({ missions, onOpen, onBack }: { missions: Mission[]; onOpen: (mission: Mission) => void; onBack: () => void }) {
@@ -306,6 +326,7 @@ function MessagesScreen({ messages, missions, onBack, onSend }: { messages: Miss
 }
 
 function SettingsScreen({ onBack }: { onBack: () => void }) {
+  const { canInstall, isInstalled, isIOS, promptInstall } = usePwaInstall()
   const [oldPin, setOldPin] = useState('')
   const [newPin, setNewPin] = useState('')
   const [msg, setMsg] = useState('')
@@ -329,6 +350,29 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
   return (
     <main>
       <PageTitle title="Paramètres" onBack={onBack} />
+      {/* Carte d'installation */}
+      {!isInstalled && (
+        <section className="rounded-2xl bg-white p-5 shadow-card mb-4 border border-bassin/20">
+          <h2 className="text-lg font-extrabold text-slate-900 mb-2 flex items-center gap-2">
+            <Smartphone className="h-5 w-5 text-bassin" /> Application Mobile
+          </h2>
+          
+          {isIOS ? (
+            <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg">
+              <p className="font-bold text-slate-800 mb-1">Installer sur iPhone :</p>
+              <p>1. Appuyez sur l'icône <strong>Partager</strong> (en bas de Safari).</p>
+              <p>2. Faites défiler et cliquez sur <strong>"Sur l'écran d'accueil"</strong>.</p>
+            </div>
+          ) : canInstall ? (
+            <button onClick={promptInstall} className="w-full rounded-xl bg-bassin text-white font-bold py-3 px-4">
+              📲 Installer CargoTraction
+            </button>
+          ) : (
+            <p className="text-sm text-slate-500">Ouvrez ce site dans Chrome (Android) ou Safari (iPhone) pour l'installer.</p>
+          )}
+        </section>
+      )}
+
       <section className="rounded-2xl bg-white p-5 shadow-card mb-4">
         <h2 className="text-lg font-extrabold text-slate-900 mb-4 flex items-center gap-2"><Key className="h-5 w-5 text-bassin" /> Sécurité du compte</h2>
         <form onSubmit={changePin} className="space-y-4">
