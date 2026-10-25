@@ -11,6 +11,8 @@ import type { DriverProfile, Mission, MissionEvent, MissionMessage } from './typ
 import { LogoSlot } from './components/LogoSlot'
 import { ActionButton, NetworkBadge, StatusPill } from './components/ui'
 import { usePwaInstall } from './hooks/usePwaInstall'
+import { useCallback, useEffect, useState } from 'react'
+
 
 type Screen = 'home' | 'missions' | 'mission' | 'scanner' | 'messages' | 'settings'
 
@@ -64,7 +66,7 @@ function LoginView({ onLogin }: { onLogin: (code: string, pin: string) => Promis
           <p className="mt-3 text-base leading-7 text-slate-600">Connectez-vous avec votre matricule et votre code personnel. Aucun GPS n’est utilisé.</p>
           <form onSubmit={submit} className="mt-7 space-y-5">
             <label className="block"><span className="mb-2 block text-base font-bold text-slate-800">Matricule chauffeur</span><input value={code} onChange={(e) => setCode(e.target.value)} autoComplete="username" placeholder="Ex. CT-042" className="min-h-14 w-full rounded-xl border-2 border-slate-200 px-4 text-lg uppercase outline-none focus:border-bassin" /></label>
-            <label className="block"><span className="mb-2 block text-base font-bold text-slate-800">PIN (4 à 6 chiffres)</span><input value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" type="password" autoComplete="new-password" placeholder="••••" className="min-h-14 w-full rounded-xl border-2 border-slate-200 px-4 text-2xl tracking-[0.35em] outline-none focus:border-bassin" /></label>
+            <label className="block"><span className="mb-2 block text-base font-bold text-slate-800">PIN (4 à 6 chiffres)</span><input value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" type="password" autoComplete="one-time-code" placeholder="••••" className="min-h-14 w-full rounded-xl border-2 border-slate-200 px-4 text-2xl tracking-[0.35em] outline-none focus:border-bassin" /></label>
             {error && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-base font-semibold text-rose-800">{error}</p>}
             <ActionButton type="submit" className="w-full" disabled={busy}>{busy ? 'Connexion…' : 'Se connecter'}</ActionButton>
           </form>
@@ -160,7 +162,21 @@ function EmptyState({ text }: { text: string }) { return <div className="rounded
 function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Mission; onBack: () => void; onEvent: (eventType: MissionEvent['event_type'], payload: Record<string, unknown>) => Promise<void>; onRefresh: () => void }) {
   const [km, setKm] = useState({ departure: '', arrival: '' })
   const [photoNotice, setPhotoNotice] = useState('')
-  const saveStatus = async (status: string) => { await onEvent('status', { status }); onRefresh() }
+  const [events, setEvents] = useState<any[]>([])
+
+  // 🔥 Chargement de l'historique pour colorer les boutons
+  useEffect(() => {
+    dataClient.getEvents(mission.id).then(setEvents).catch(() => {})
+  }, [mission.id])
+
+  const hasEvent = (status: string) => events.some(e => e.event_type === 'status' && e.payload?.status === status)
+
+  const saveStatus = async (status: string) => { 
+    // Mise à jour visuelle immédiate
+    setEvents(prev => [...prev, { event_type: 'status', payload: { status } }])
+    await onEvent('status', { status }); 
+    onRefresh() 
+  }
   
   const saveKm = async (kind: 'departure' | 'arrival') => { 
     const value = Number(km[kind]); 
@@ -214,6 +230,9 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
     return stop.planned_at ? `Prévu : ${formatDate(stop.planned_at)}` : null;
   };
 
+  // 🔥 LOGIQUE DES NOMS DE BOUTONS
+  const labelStep2 = isImport ? 'Livré' : 'Récupéré';
+
   return <main className="pb-28">
     <PageTitle title={displayNumber} subtitle={`${clientRef} · ${formatDate(mission.planned_pickup_at)}`} onBack={onBack} />
     
@@ -230,10 +249,27 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div><p className="text-sm font-bold uppercase tracking-wide text-slate-500">Statut actuel</p><div className="mt-2"><StatusPill status={mission.status} /></div></div>
       </div>
+      
+      {/* 🔥 LES 3 BOUTONS AVEC COULEURS ET NOUVEAUX NOMS */}
       <div className="mt-5 grid grid-cols-3 gap-2 border-t border-slate-100 pt-5">
-        <ActionButton className="px-2 text-sm" onClick={() => saveStatus('in_progress')}>Prise en charge</ActionButton>
-        <ActionButton className="px-2 text-sm" variant="secondary" onClick={() => saveStatus('arrived')}>Arrivé</ActionButton>
-        <ActionButton className="px-2 text-sm" variant="secondary" onClick={() => saveStatus('completed')}>Livré</ActionButton>
+        <button 
+          className={`min-h-12 rounded-lg px-2 text-sm font-bold transition-colors ${hasEvent('in_progress') ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}
+          onClick={() => saveStatus('in_progress')}
+        >
+          J'ai le conteneur
+        </button>
+        <button 
+          className={`min-h-12 rounded-lg px-2 text-sm font-bold transition-colors ${hasEvent('arrived') ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}
+          onClick={() => saveStatus('arrived')}
+        >
+          {labelStep2}
+        </button>
+        <button 
+          className={`min-h-12 rounded-lg px-2 text-sm font-bold transition-colors ${hasEvent('completed') ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}
+          onClick={() => saveStatus('completed')}
+        >
+          Fini
+        </button>
       </div>
     </section>
 

@@ -27,6 +27,16 @@ export const dataClient = {
 
     return { driver: data.driver as DriverProfile, demo: false }
   },
+  
+  async getEvents(missionId: string): Promise<any[]> {
+    if (isDemoMode) return []
+    const { data, error } = await supabase!.from('driver_mission_events')
+      .select('*')
+      .eq('mission_id', missionId)
+      .order('created_at', { ascending: true })
+    if (error) throw error
+    return data ?? []
+  },
 
   async getMissions(): Promise<Mission[]> {
     if (isDemoMode) return clone(demoMissions)
