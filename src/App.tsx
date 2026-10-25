@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   ArrowLeft, Camera, Check, CheckCircle2, ChevronRight, ClipboardList, CloudOff,
   FileText, Fuel, History, Home, Info, MapPin, Menu, MessageCircle, Navigation, Phone,
-  Send, Truck, Upload, X, Key
+  Send, Smartphone, Truck, Upload, X, Key
 } from 'lucide-react'
 import { dataClient, isDemoMode } from './data/client'
 import { demoDriver } from './data/demo'
