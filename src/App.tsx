@@ -188,8 +188,12 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
   const onFuelPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => { 
     const file = event.target.files?.[0]; 
     if (!file) return; 
-    await onEvent('fuel_ticket', { document_type: 'fuel_ticket', original_filename: file.name, size_bytes: file.size, mime_type: file.type }); 
-    setPhotoNotice(`Photo du ticket « ${file.name} » prête pour l'OCR.`); 
+    try {
+      await dataClient.uploadDocument(mission.id, file, 'fuel_ticket')
+      setPhotoNotice(`Photo du ticket « ${file.name} » envoyée et en attente de validation.`); 
+    } catch (err) {
+      setPhotoNotice(`Erreur lors de l'envoi du ticket.`);
+    }
   }
 
   const displayNumber = (mission as any).dossier_number || mission.mission_number;
@@ -363,8 +367,12 @@ function ScannerScreen({ missions, onBack, onEvent }: { missions: Mission[]; onB
   const save = async (event: React.ChangeEvent<HTMLInputElement>, type: string) => { 
     const file = event.target.files?.[0]; 
     if (!file || !missionId) return; 
-    await onEvent('document', { mission_id: missionId, document_type: type, original_filename: file.name, size_bytes: file.size, mime_type: file.type }); 
-    setNotice(`« ${file.name} » est prêt à être envoyé.`) 
+    try {
+      await dataClient.uploadDocument(missionId, file, type)
+      setNotice(`« ${file.name} » a été envoyé au bureau et est en attente de validation.`) 
+    } catch (err) {
+      setNotice(`Erreur lors de l'envoi du document.`)
+    }
   }
   
   return <main>

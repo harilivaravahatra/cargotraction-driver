@@ -37,6 +37,36 @@ export const dataClient = {
     if (error) throw error
     return data ?? []
   },
+ 
+  async uploadDocument(missionId: string, file: File, documentType: string): Promise<void> {
+    if (isDemoMode) return
+    
+    // 1. Upload du fichier dans le Storage
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${missionId}/${crypto.randomUUID()}.${fileExt}`
+    
+    const { error: storageError } = await supabase!.storage
+      .from('mission-documents') // Vérifie que le nom de ton bucket est bien celui-ci
+      .upload(fileName, file)
+    
+    if (storageError) throw storageError
+
+    // 2. Insertion dans la table mission_documents avec le statut 'pending'
+    const { error: dbError } = await supabase!
+      .from('mission_documents')
+      .insert({
+        mission_id: missionId,
+        document_type: documentType,
+        storage_path: fileName,
+        original_filename: file.name,
+        file_extension: fileExt,
+        mime_type: file.type,
+        size_bytes: file.size,
+        validation_status: 'pending' // 🔥 LE CHAMP CRUCIAL ICI
+      })
+      
+    if (dbError) throw dbError
+  },
 
   async getMissions(): Promise<Mission[]> {
     if (isDemoMode) return clone(demoMissions)
