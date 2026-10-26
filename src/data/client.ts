@@ -71,7 +71,8 @@ export const dataClient = {
       p_mission_id: event.mission_id,
       p_event_type: event.event_type,
       p_payload: event.payload,
-      p_occurred_at: event.occurred_at
+      p_occurred_at: event.occurred_at,
+      p_tractor_id: (event as any).tractor_id || null 
     })
     if (error) throw error
   },

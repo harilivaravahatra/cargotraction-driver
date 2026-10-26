@@ -578,7 +578,37 @@ export function App() {
   useEffect(() => { if (online) void sync() }, [online, sync])
 
   const login = async (code: string, pin: string) => { const result = await dataClient.login(code, pin); setDriver(result.driver); setNotice(result.demo ? 'Mode démo actif.' : 'Connexion réussie.') }
-  const addEvent = async (eventType: MissionEvent['event_type'], payload: Record<string, unknown>) => { const missionId = selected?.id ?? String(payload.mission_id ?? ''); if (!missionId) return; const event: MissionEvent = { client_event_id: makeClientEventId(), mission_id: missionId, event_type: eventType, payload, occurred_at: new Date().toISOString(), synced: false }; await queueEvent(event); await updatePending(); if (online) { try { await dataClient.submitEvent(event); await removeEvent(event.client_event_id); await updatePending(); setNotice('Action enregistrée et synchronisée.') } catch { setNotice('Action enregistrée hors ligne.') } } else setNotice('Hors ligne : action enregistrée.') }
+  const addEvent = async (eventType: MissionEvent['event_type'], payload: Record<string, unknown>) => { 
+    const missionId = selected?.id ?? String(payload.mission_id ?? ''); 
+    if (!missionId) return; 
+    
+    const event: MissionEvent = { 
+      client_event_id: makeClientEventId(), 
+      mission_id: missionId, 
+      event_type: eventType, 
+      payload, 
+      occurred_at: new Date().toISOString(), 
+      synced: false,
+      tractor_id: (selected as any)?.tractor_id 
+    }; 
+    
+    await queueEvent(event); 
+    await updatePending(); 
+    if (online) { 
+      try { 
+        await dataClient.submitEvent(event); 
+        await removeEvent(event.client_event_id); 
+        await updatePending(); 
+        setNotice('Action enregistrée et synchronisée.') 
+      } catch { 
+        setNotice('Action enregistrée hors ligne.') 
+      } 
+    } else {
+      setNotice('Hors ligne : action enregistrée.')
+    } 
+  }
+
+
   const sendMessage = async (missionId: string, body: string, type: string) => { try { await dataClient.sendMessage(missionId, body, type); setMessages((current) => [...current, { id: makeClientEventId(), mission_id: missionId, sender_role: 'driver', sender_name: 'Vous', body, created_at: new Date().toISOString(), read_at: new Date().toISOString(), message_type: type }]); setNotice('Message envoyé.') } catch { setNotice('Message conservé localement.') } }
   
   if (!driver) return <LoginView onLogin={login} />
