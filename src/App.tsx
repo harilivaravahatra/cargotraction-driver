@@ -181,15 +181,15 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
   const displayNumber = (mission as any).dossier_number || mission.mission_number;
   const clientRef = (mission as any).client_order_reference ? `Réf. client : ${(mission as any).client_order_reference}` : 'Ordre client non renseigné';
 
-   const getContainers = () => {
+  const getContainers = () => {
     const list = [];
     const c1 = mission.container_number;
     const c2 = (mission as any).container_number_2;
     const cReturn = (mission as any).container_number_return;
     const sameReturn = (mission as any).same_return_container !== false;
     
-    // Formater le type en "DRY" au lieu de "DV"
-    const formatType = (t: string) => t ? t.replace('DV', 'DRY') : 'Type non renseigné';
+    // 🔥 CORRECTION ICI : On accepte que le type soit vide (undefined/null)
+    const formatType = (t?: string | null) => t ? t.replace('DV', 'DRY') : 'Type non renseigné';
 
     if (c1) list.push({ label: (c2 || (!sameReturn && cReturn)) ? 'Aller' : 'Conteneur', num: formatContainerNumber(c1), type: formatType(mission.container_type) });
     if (c2) list.push({ label: 'Aller 2', num: formatContainerNumber(c2), type: formatType((mission as any).container_type_2) });
