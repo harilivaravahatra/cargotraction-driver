@@ -25,20 +25,36 @@ export const dataClient = {
 
   async getMissions(): Promise<Mission[]> {
     if (isDemoMode) return clone(demoMissions)
-    // 🔥 On fait une jointure pour récupérer le terminal_code
-    const { data, error } = await supabase!.from('missions')
-      .select('*, mission_stops(*, container_terminals(terminal_code))')
-      .order('planned_pickup_at', { ascending: true })
-    if (error) throw error
     
-    return (data ?? []).map((row) => {
+    // 1. On récupère les missions avec leurs étapes
+    const { data: missionsData, error: missionsError } = await supabase!
+      .from('missions')
+      .select('*, mission_stops(*)')
+      .order('planned_pickup_at', { ascending: true })
+    
+    if (missionsError) throw missionsError
+
+    // 2. On récupère TOUS les terminaux pour avoir leurs codes
+    const { data: terminalsData, error: terminalsError } = await supabase!
+      .from('container_terminals')
+      .select('id, terminal_code')
+    
+    if (terminalsError) throw terminalsError
+
+    // 3. On crée un dictionnaire pour retrouver le code à partir de l'ID du terminal
+    const terminalsMap = new Map(
+      (terminalsData ?? []).map(t => [t.id, t.terminal_code])
+    )
+
+    // 4. On assemble le tout
+    return (missionsData ?? []).map((row: any) => {
       const stops = (row.mission_stops ?? []).map((stop: any) => ({
         ...stop,
-        // On ajoute le code terminal à l'objet stop
-        terminal_code: stop.container_terminals?.terminal_code
+        // Si l'étape a un terminal_id, on va chercher son code. Sinon undefined.
+        terminal_code: stop.terminal_id ? terminalsMap.get(stop.terminal_id) : undefined
       }))
-      return { ...row, stops }
-    }) as Mission[]
+      return { ...row, stops } as Mission
+    })
   },
 
   async getMessages(): Promise<MissionMessage[]> {
