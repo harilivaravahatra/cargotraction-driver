@@ -12,60 +12,15 @@ const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T
 export const dataClient = {
   async login(employeeCode: string, pin: string): Promise<{ driver: DriverProfile; demo: boolean }> {
     if (isDemoMode) return { driver: clone(demoDriver), demo: true }
-    
-    // Appel de l'Edge Function
     const { data, error } = await supabase!.functions.invoke('driver-login', { body: { employee_code: employeeCode, pin } })
     if (error) throw error
-
-    // CRUCIAL : On connecte la session Supabase avec les tokens reçus
     if (data?.session) {
       await supabase!.auth.setSession({
         access_token: data.session.access_token,
         refresh_token: data.session.refresh_token
       })
     }
-
     return { driver: data.driver as DriverProfile, demo: false }
-  },
-  
-  async getEvents(missionId: string): Promise<any[]> {
-    if (isDemoMode) return []
-    const { data, error } = await supabase!.from('driver_mission_events')
-      .select('*')
-      .eq('mission_id', missionId)
-      .order('created_at', { ascending: true })
-    if (error) throw error
-    return data ?? []
-  },
- 
-  async uploadDocument(missionId: string, file: File, documentType: string): Promise<void> {
-    if (isDemoMode) return
-    
-    // 1. Upload du fichier dans le Storage
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${missionId}/${crypto.randomUUID()}.${fileExt}`
-    
-    const { error: storageError } = await supabase!.storage
-      .from('mission-documents') // Vérifie que le nom de ton bucket est bien celui-ci
-      .upload(fileName, file)
-    
-    if (storageError) throw storageError
-
-    // 2. Insertion dans la table mission_documents avec le statut 'pending'
-    const { error: dbError } = await supabase!
-      .from('mission_documents')
-      .insert({
-        mission_id: missionId,
-        document_type: documentType,
-        storage_path: fileName,
-        original_filename: file.name,
-        file_extension: fileExt,
-        mime_type: file.type,
-        size_bytes: file.size,
-        validation_status: 'pending' // 🔥 LE CHAMP CRUCIAL ICI
-      })
-      
-    if (dbError) throw dbError
   },
 
   async getMissions(): Promise<Mission[]> {
@@ -94,19 +49,67 @@ export const dataClient = {
     if (error) throw error
   },
 
-  async sendMessage(missionId: string, body: string): Promise<void> {
+  async sendMessage(missionId: string, body: string, messageType: string = 'other'): Promise<void> {
     if (isDemoMode) return
-    const { error } = await supabase!.rpc('driver_send_message', { p_mission_id: missionId, p_body: body })
+    const { error } = await supabase!.rpc('driver_send_message', { 
+      p_mission_id: missionId, 
+      p_body: body,
+      p_message_type: messageType 
+    })
     if (error) throw error
   },
 
-  // 👇 NOUVELLE FONCTION AJOUTÉE ICI 👇
+  async getEvents(missionId: string): Promise<any[]> {
+    if (isDemoMode) return []
+    const { data, error } = await supabase!.from('driver_mission_events')
+      .select('*')
+      .eq('mission_id', missionId)
+      .order('created_at', { ascending: true })
+    if (error) throw error
+    return data ?? []
+  },
+
   async changePin(oldPin: string, newPin: string): Promise<void> {
     if (isDemoMode) return
-    const { error } = await supabase!.rpc('driver_change_pin', { 
-      p_old_pin: oldPin, 
-      p_new_pin: newPin 
-    })
+    const { error } = await supabase!.rpc('driver_change_pin', { p_old_pin: oldPin, p_new_pin: newPin })
     if (error) throw error
+  },
+
+  async uploadDocument(missionId: string, file: File, documentType: string): Promise<void> {
+    if (isDemoMode) return
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${missionId}/${crypto.randomUUID()}.${fileExt}`
+    const { error: storageError } = await supabase!.storage.from('mission-documents').upload(fileName, file)
+    if (storageError) throw storageError
+    const { error: dbError } = await supabase!.from('mission_documents').insert({
+      mission_id: missionId,
+      document_type: documentType,
+      storage_path: fileName,
+      original_filename: file.name,
+      file_extension: fileExt,
+      mime_type: file.type,
+      size_bytes: file.size,
+      validation_status: 'pending'
+    })
+    if (dbError) throw dbError
+  },
+
+  // 🔥 NOUVELLE FONCTION : Upload Ticket Carburant
+  async uploadFuelTicket(file: File, odometerKm: number): Promise<void> {
+    if (isDemoMode) return
+    const fileExt = file.name.split('.').pop()
+    const fileName = `fuel/${crypto.randomUUID()}.${fileExt}`
+    
+    // 1. Upload image
+    const { error: storageError } = await supabase!.storage.from('mission-documents').upload(fileName, file)
+    if (storageError) throw storageError
+
+    // 2. Insertion dans fuel_tickets
+    const { error: dbError } = await supabase!.from('fuel_tickets').insert({
+      photo_path: fileName,
+      odometer_km: odometerKm,
+      driver_id: (await supabase!.auth.getUser()).data.user?.id
+    })
+    if (dbError) throw dbError
   }
 }
