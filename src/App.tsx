@@ -13,7 +13,7 @@ import { ActionButton, NetworkBadge, StatusPill } from './components/ui'
 import { usePwaInstall } from './hooks/usePwaInstall'
 import { hasInvalidContainerNumber, normalizeContainerNumber } from './lib/containerIso6346'
 
-function formatContainerNumber(value: string): string {
+function formatContainerNumber(value?: string | null): string {
   const clean = (value || "").replace(/\s+/g, "").toUpperCase();
   if (clean.length <= 4) return clean;
   if (clean.length <= 7) return `${clean.slice(0, 4)} ${clean.slice(4)}`;
@@ -377,7 +377,7 @@ function MessagesScreen({ messages, missions, onBack, onSend }: { messages: Miss
   const [missionId, setMissionId] = useState(activeMissions[0]?.id ?? '')
   const [messageType, setMessageType] = useState('container')
   const [body, setBody] = useState('')
-  const visible = messages.filter((message) => message.message_id === missionId)
+  const visible = messages.filter((message) => message.mission_id === missionId)
   
   // 🔥 Vérification de la validité du conteneur
   const isInvalidContainer = messageType === 'container' && hasInvalidContainerNumber(body);
