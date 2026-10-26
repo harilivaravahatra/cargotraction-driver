@@ -57,6 +57,7 @@ export interface MissionEvent {
   payload: Record<string, unknown>
   occurred_at: string
   synced: boolean
+  tractor_id?: string
 }
 
 export interface OdometerReading {
