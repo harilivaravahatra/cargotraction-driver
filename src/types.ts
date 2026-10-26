@@ -8,6 +8,7 @@ export interface MissionStop {
   sequence_number: number
   stop_type: StopType | string
   address_snapshot: string
+  terminal_code?: string;
   planned_at?: string | null
   actual_at?: string | null
   instructions?: string | null
