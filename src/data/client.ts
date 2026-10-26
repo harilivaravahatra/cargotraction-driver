@@ -25,9 +25,20 @@ export const dataClient = {
 
   async getMissions(): Promise<Mission[]> {
     if (isDemoMode) return clone(demoMissions)
-    const { data, error } = await supabase!.from('missions').select('*, mission_stops(*)').order('planned_pickup_at', { ascending: true })
+    // 🔥 On fait une jointure pour récupérer le terminal_code
+    const { data, error } = await supabase!.from('missions')
+      .select('*, mission_stops(*, container_terminals(terminal_code))')
+      .order('planned_pickup_at', { ascending: true })
     if (error) throw error
-    return (data ?? []).map((row) => ({ ...row, stops: row.mission_stops ?? [] })) as Mission[]
+    
+    return (data ?? []).map((row) => {
+      const stops = (row.mission_stops ?? []).map((stop: any) => ({
+        ...stop,
+        // On ajoute le code terminal à l'objet stop
+        terminal_code: stop.container_terminals?.terminal_code
+      }))
+      return { ...row, stops }
+    }) as Mission[]
   },
 
   async getMessages(): Promise<MissionMessage[]> {

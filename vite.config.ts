@@ -20,5 +20,9 @@ export default defineConfig({
       }
     })
   ],
+  // 🔥 AJOUT ICI : Supprime les console.log et debugger en production
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
   server: { port: 3000, host: '0.0.0.0' }
 })

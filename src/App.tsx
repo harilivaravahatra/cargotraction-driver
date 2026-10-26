@@ -41,7 +41,7 @@ function stopLabel(type: string) {
   if (type === 'terminal') return 'Terminal'
   if (type === 'port') return 'Terminal de sortie'
   if (type === 'return') return "Terminal d'entrée"
-  if (type === 'depot') return 'Dépôt'
+  if (type === 'depot') return 'POSIT'
   return 'Étape'
 }
 
@@ -138,13 +138,32 @@ function HomeScreen({ missions, messages, onNavigate, onMission }: { missions: M
 function MissionsScreen({ missions, onOpen, onBack }: { missions: Mission[]; onOpen: (mission: Mission) => void; onBack: () => void }) {
   const active = missions.filter((m) => ['planned', 'in_progress'].includes(m.status))
   const history = missions.filter((m) => !['planned', 'in_progress'].includes(m.status))
-  return <main><PageTitle title="Mes missions" subtitle="La feuille de transport, en temps réel." onBack={onBack} /><section className="space-y-3"><div className="flex items-center justify-between"><h2 className="text-lg font-extrabold text-slate-900">À traiter</h2><span className="text-sm font-bold text-slate-500">{active.length}</span></div>{active.length ? active.map((mission) => <MissionCard key={mission.id} mission={mission} onOpen={() => onOpen(mission)} />) : <EmptyState text="Aucune mission en cours." />}</section><section className="mt-8 space-y-3"><div className="flex items-center gap-2"><History className="h-5 w-5 text-slate-500" /><h2 className="text-lg font-extrabold text-slate-900">Historique récent</h2></div>{history.map((mission) => <MissionCard key={mission.id} mission={mission} onOpen={() => onOpen(mission)} />)}</section></main>
+  
+  return <main>
+    <PageTitle title="Mes missions" subtitle="La feuille de transport, en temps réel." onBack={onBack} />
+    <section className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-extrabold text-slate-900">À traiter</h2>
+        <span className="text-sm font-bold text-slate-500">{active.length}</span>
+      </div>
+      {active.length ? active.map((mission) => <MissionCard key={mission.id} mission={mission} onOpen={() => onOpen(mission)} />) : <EmptyState text="Aucune mission en cours." />}
+    </section>
+    
+    {/* 🔥 HISTORIQUE REPLIÉ */}
+    <AccordionSection title="Historique récent" icon={<History className="h-5 w-5 text-bassin" />} defaultOpen={false}>
+      <div className="space-y-3">
+        {history.length ? history.map((mission) => <MissionCard key={mission.id} mission={mission} onOpen={() => onOpen(mission)} />) : <EmptyState text="Aucune mission dans l'historique." />}
+      </div>
+    </AccordionSection>
+  </main>
 }
 
 function EmptyState({ text }: { text: string }) { return <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-white p-8 text-center text-base text-slate-500">{text}</div> }
 
 function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Mission; onBack: () => void; onEvent: (eventType: MissionEvent['event_type'], payload: Record<string, unknown>) => Promise<void>; onRefresh: () => void }) {
   const [km, setKm] = useState({ departure: '', arrival: '' })
+  const [savedKm, setSavedKm] = useState({ departure: false, arrival: false }) // 🔥 Pour le bouton final
+  const [hasCmr, setHasCmr] = useState(false) // 🔥 Pour le bouton final
   const [photoNotice, setPhotoNotice] = useState('')
   const [events, setEvents] = useState<any[]>([])
 
@@ -164,6 +183,7 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
     const value = Number(km[kind]); 
     if (!value || value < 0) { setPhotoNotice('Saisissez une valeur kilométrique valide.'); return }; 
     await onEvent('odometer', { reading_type: kind, value_km: value }); 
+    setSavedKm(prev => ({ ...prev, [kind]: true })) // 🔥 On marque comme enregistré
     setPhotoNotice('Relevé kilométrique enregistré.'); 
   }
 
@@ -172,11 +192,20 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
     if (!file) return; 
     try {
       await dataClient.uploadDocument(mission.id, file, 'cmr')
+      setHasCmr(true) // 🔥 On marque le CMR comme uploadé
       setPhotoNotice(`CMR « ${file.name} » envoyé. En attente de validation par le bureau.`); 
     } catch (err) {
       setPhotoNotice('Erreur lors de l\'envoi du CMR.');
     }
   }
+
+  const declareAvailable = async () => {
+    await onEvent('status', { status: 'available' })
+    setPhotoNotice('Mission terminée ! Vous êtes déclaré disponible pour une nouvelle mission.')
+  }
+
+  // 🔥 Condition pour activer le bouton du bas
+  const canDeclareAvailable = hasEvent('in_progress') && hasEvent('arrived') && hasEvent('completed') && hasCmr && savedKm.departure && savedKm.arrival;
 
   const displayNumber = (mission as any).dossier_number || mission.mission_number;
   const clientRef = (mission as any).client_order_reference ? `Réf. client : ${(mission as any).client_order_reference}` : 'Ordre client non renseigné';
@@ -188,7 +217,6 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
     const cReturn = (mission as any).container_number_return;
     const sameReturn = (mission as any).same_return_container !== false;
     
-    // 🔥 CORRECTION ICI : On accepte que le type soit vide (undefined/null)
     const formatType = (t?: string | null) => t ? t.replace('DV', 'DRY') : 'Type non renseigné';
 
     if (c1) list.push({ label: (c2 || (!sameReturn && cReturn)) ? 'Aller' : 'Conteneur', num: formatContainerNumber(c1), type: formatType(mission.container_type) });
@@ -236,7 +264,7 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
       </div>
     </section>
 
-    {/* 🔥 ACCORDÉON : Conteneurs */}
+    {/* 🔥 ACCORDÉON OUVERT PAR DÉFAUT */}
     <AccordionSection title="Conteneur(s)" icon={<Truck className="h-5 w-5 text-bassin" />} defaultOpen={true}>
       <div className="space-y-3">
         {containers.length > 0 ? containers.map((c, i) => (
@@ -256,8 +284,8 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
       </div>
     </AccordionSection>
     
-    {/* 🔥 ACCORDÉON : Étapes */}
-    <AccordionSection title="Étapes" icon={<Navigation className="h-5 w-5 text-bassin" />}>
+    {/* 🔥 ACCORDÉON OUVERT PAR DÉFAUT */}
+    <AccordionSection title="Étapes" icon={<Navigation className="h-5 w-5 text-bassin" />} defaultOpen={true}>
       <div className="space-y-5">
         {mission.stops.map((stop, index) => <div key={stop.id} className="relative pl-9">
           {index < mission.stops.length - 1 && <span className="absolute left-[11px] top-7 h-full w-0.5 bg-slate-200" />}
@@ -265,8 +293,12 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold uppercase tracking-wide text-bassin">{stopLabel(stop.stop_type)}</p>
-              {/* 🔥 Code Terminal (PRESTALOG, ARNAL) */}
-              <p className="mt-1 text-base font-bold text-slate-900">{stop.location_label_snapshot ?? stop.address_snapshot}</p>
+              
+              {/* 🔥 CODE TERMINAL */}
+              <p className="mt-1 text-base font-bold text-slate-900">
+                {stop.terminal_code || stop.location_label_snapshot || stop.address_snapshot}
+              </p>
+              
               <p className="mt-1 text-sm leading-6 text-slate-600">{stop.address_snapshot}</p>
               {stop.planned_at && <p className="mt-2 text-sm font-semibold text-slate-600">Prévu : {formatDate(stop.planned_at)}</p>}
               {stop.instructions && <p className="mt-2 rounded-lg bg-amber-50 p-2 text-sm text-amber-900">{stop.instructions}</p>}
@@ -280,8 +312,8 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
       </div>
     </AccordionSection>
 
-    {/* 🔥 ACCORDÉON : Détails transport */}
-    <AccordionSection title="Détails transport" icon={<Truck className="h-5 w-5 text-bassin" />}>
+    {/* 🔥 ACCORDÉON REPLIÉ PAR DÉFAUT */}
+    <AccordionSection title="Détails transport" icon={<Truck className="h-5 w-5 text-bassin" />} defaultOpen={false}>
       <dl className="grid grid-cols-2 gap-x-4 gap-y-4 text-base">
         <DataItem label="Poids brut" value={mission.gross_weight_kg ? `${mission.gross_weight_kg.toLocaleString('fr-FR')} kg` : 'Non renseigné'} />
         <DataItem label="Plomb" value={mission.seal_number ?? 'À contrôler'} />
@@ -291,31 +323,51 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
       {mission.notes && <p className="mt-5 border-t border-slate-100 pt-4 text-base leading-7 text-slate-700"><strong>Consignes :</strong> {mission.notes}</p>}
     </AccordionSection>
 
-    {/* 🔥 ACCORDÉON : Compteur km */}
-    <AccordionSection title="Compteur kilométrique" icon={<span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-bassin text-[10px] font-black text-bassin">km</span>}>
+    {/* 🔥 ACCORDÉON OUVERT PAR DÉFAUT */}
+    <AccordionSection title="Compteur kilométrique" icon={<span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-bassin text-[10px] font-black text-bassin">km</span>} defaultOpen={true}>
       <p className="text-sm leading-6 text-slate-600 mb-4">Saisissez la valeur relevée sur le tableau de bord.</p>
       <div className="grid gap-4 sm:grid-cols-2">
         {(['departure', 'arrival'] as const).map((kind) => (
-          <div key={kind} className="rounded-xl border border-slate-200 p-4">
+          <div key={kind} className={`rounded-xl border p-4 ${savedKm[kind] ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200'}`}>
             <p className="font-bold text-slate-900">Kilométrage {kind === 'departure' ? 'départ' : 'arrivée'}</p>
-            <input type="number" min="0" inputMode="numeric" placeholder="Ex: 125000" value={km[kind]} onChange={(e) => setKm({ ...km, [kind]: e.target.value })} className="mt-3 min-h-12 w-full rounded-lg border-2 border-slate-200 px-3 text-base" />
-            <ActionButton variant="secondary" className="mt-3 w-full text-sm" onClick={() => saveKm(kind)}>Enregistrer</ActionButton>
+            <input type="number" min="0" inputMode="numeric" placeholder="Ex: 125000" value={km[kind]} onChange={(e) => { setKm({ ...km, [kind]: e.target.value }); setSavedKm(prev => ({...prev, [kind]: false})) }} className="mt-3 min-h-12 w-full rounded-lg border-2 border-slate-200 px-3 text-base" />
+            <ActionButton variant={savedKm[kind] ? 'primary' : 'secondary'} className={`mt-3 w-full text-sm ${savedKm[kind] ? 'bg-emerald-600 text-white' : ''}`} onClick={() => saveKm(kind)}>
+              {savedKm[kind] ? 'Enregistré ✓' : 'Enregistrer'}
+            </ActionButton>
           </div>
         ))}
       </div>
     </AccordionSection>
 
-    {/* 🔥 CMR / BON DE LIVRAISON */}
+    {/* 🔥 CMR */}
     <section className="mt-4 rounded-2xl bg-white p-5 shadow-card">
       <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900"><FileText className="h-5 w-5 text-bassin" />CMR / Bon de livraison</h2>
       <p className="mt-1 text-sm leading-6 text-slate-600">Prenez en photo le CMR signé pour cette mission.</p>
-      <label className="mt-4 flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-bassin px-4 text-base font-bold text-bassin">
-        <Camera className="h-5 w-5" />Photographier le CMR
+      <label className={`mt-4 flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 text-base font-bold ${hasCmr ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-bassin text-bassin'}`}>
+        {hasCmr ? <CheckCircle2 className="h-5 w-5" /> : <Camera className="h-5 w-5" />}
+        {hasCmr ? 'CMR envoyé ✓' : 'Photographier le CMR'}
         <input type="file" accept="image/*,application/pdf" capture="environment" className="sr-only" onChange={onCmrPhoto} />
       </label>
     </section>
 
     {photoNotice && <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-900"><Info className="mt-0.5 h-5 w-5 shrink-0" />{photoNotice}</div>}
+
+    {/* 🔥 BOUTON FINAL DE DISPONIBILITÉ */}
+    <section className="mt-6">
+      <button 
+        onClick={declareAvailable} 
+        disabled={!canDeclareAvailable}
+        className={`w-full rounded-2xl p-5 text-lg font-bold shadow-lg transition-all ${canDeclareAvailable ? 'bg-bassin text-white hover:bg-bassin-dark' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+      >
+        Terminer la mission et déclarer ma disponibilité
+      </button>
+      {!canDeclareAvailable && (
+        <p className="text-center text-xs text-slate-500 mt-2">
+          (Complétez les 3 statuts, le CMR et les kilométrages pour activer)
+        </p>
+      )}
+    </section>
+
   </main>
 }
 
