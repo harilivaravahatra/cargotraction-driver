@@ -172,21 +172,6 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
     dataClient.getEvents(mission.id).then(setEvents).catch(() => {})
   }, [mission.id])
 
-  useEffect(() => {
-    import('./lib/supabase').then(({ supabase }) => {
-      supabase
-        .from('mission_documents')
-        .select('id')
-        .eq('mission_id', mission.id)
-        .eq('document_type', 'cmr')
-        .then(({ data }) => {
-          if (data && data.length > 0) setHasCmr(true);
-        });
-    });
-  }, [mission.id]);useEffect(() => {
-    dataClient.getEvents(mission.id).then(setEvents).catch(() => {})
-  }, [mission.id])
-
   const hasEvent = (status: string) => events.some(e => e.event_type === 'status' && e.payload?.status === status)
 
   const saveStatus = async (status: string) => { 
