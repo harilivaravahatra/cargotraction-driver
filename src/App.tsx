@@ -40,11 +40,12 @@ const compressImage = async (file: File): Promise<File> => {
         
         canvas.toBlob((blob) => {
           if (blob) {
-            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+            const baseName = file.name.replace(/\.[^/.]+$/, "");
+            resolve(new File([blob], `${baseName}.jpg`, { type: 'image/jpeg', lastModified: Date.now() }));
           } else {
             reject(new Error('Compression failed'));
           }
-        }, 'image/jpeg', 0.7); // Qualité 70% (très lisible, très léger)
+        }, 'image/jpeg', 0.7);
       };
       img.onerror = (err) => reject(err);
     };
@@ -235,9 +236,15 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
     setPhotoNotice('Compression et envoi du CMR en cours...');
     
     try {
-      const compressedFile = await compressImage(file);
+      let finalFile = file;
       
-      await dataClient.uploadDocument(mission.id, compressedFile, 'cmr')
+      if (file.type.startsWith('image/')) {
+        finalFile = await compressImage(file);
+      }
+      // Si c'est un PDF, on l'envoie tel quel
+      
+      await dataClient.uploadFile ? await dataClient.uploadDocument(mission.id, finalFile, 'cmr') : null
+      
       setHasCmr(true) 
       setPhotoNotice(`CMR envoyé avec succès ! En attente de validation par le bureau.`); 
     } catch (err) {
