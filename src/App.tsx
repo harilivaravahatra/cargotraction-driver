@@ -166,8 +166,24 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
   const [hasCmr, setHasCmr] = useState(false) // 🔥 Pour le bouton final
   const [photoNotice, setPhotoNotice] = useState('')
   const [events, setEvents] = useState<any[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+
+ useEffect(() => {
+    dataClient.getEvents(mission.id).then(setEvents).catch(() => {})
+  }, [mission.id])
 
   useEffect(() => {
+    import('./lib/supabase').then(({ supabase }) => {
+      supabase
+        .from('mission_documents')
+        .select('id')
+        .eq('mission_id', mission.id)
+        .eq('document_type', 'cmr')
+        .then(({ data }) => {
+          if (data && data.length > 0) setHasCmr(true);
+        });
+    });
+  }, [mission.id]);useEffect(() => {
     dataClient.getEvents(mission.id).then(setEvents).catch(() => {})
   }, [mission.id])
 
@@ -190,12 +206,16 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
   const onCmrPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => { 
     const file = event.target.files?.[0]; 
     if (!file) return; 
+    setIsUploading(true); 
+    setPhotoNotice('Envoi du CMR en cours...');
     try {
       await dataClient.uploadDocument(mission.id, file, 'cmr')
-      setHasCmr(true) // 🔥 On marque le CMR comme uploadé
-      setPhotoNotice(`CMR « ${file.name} » envoyé. En attente de validation par le bureau.`); 
+      setHasCmr(true) 
+      setPhotoNotice(`CMR « ${file.name} » envoyé avec succès ! En attente de validation par le bureau.`); 
     } catch (err) {
-      setPhotoNotice('Erreur lors de l\'envoi du CMR.');
+      setPhotoNotice('Erreur lors de l\'envoi du CMR. Veuillez réessayer.');
+    } finally {
+      setIsUploading(false); 
     }
   }
 
@@ -343,10 +363,10 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
     <section className="mt-4 rounded-2xl bg-white p-5 shadow-card">
       <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900"><FileText className="h-5 w-5 text-bassin" />CMR / Bon de livraison</h2>
       <p className="mt-1 text-sm leading-6 text-slate-600">Prenez en photo le CMR signé pour cette mission.</p>
-      <label className={`mt-4 flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 text-base font-bold ${hasCmr ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-bassin text-bassin'}`}>
-        {hasCmr ? <CheckCircle2 className="h-5 w-5" /> : <Camera className="h-5 w-5" />}
-        {hasCmr ? 'CMR envoyé ✓' : 'Photographier le CMR'}
-        <input type="file" accept="image/*,application/pdf" capture="environment" className="sr-only" onChange={onCmrPhoto} />
+      <label className={`mt-4 flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 text-base font-bold ${hasCmr ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-bassin text-bassin'} ${isUploading ? 'opacity-50 cursor-wait' : ''}`}>
+        {isUploading ? <CloudOff className="h-5 w-5 animate-pulse" /> : hasCmr ? <CheckCircle2 className="h-5 w-5" /> : <Camera className="h-5 w-5" />}
+        {isUploading ? 'Envoi en cours...' : hasCmr ? 'CMR envoyé ✓' : 'Photographier le CMR'}
+        <input type="file" accept="image/*,application/pdf" className="sr-only" onChange={onCmrPhoto} disabled={isUploading} />
       </label>
     </section>
 
@@ -412,7 +432,7 @@ function FuelScreen({ onBack, onEvent }: { onBack: () => void; onEvent: (eventTy
       <label className={`flex min-h-20 cursor-pointer items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-4 transition ${km ? 'border-bassin bg-blue-50 hover:bg-blue-100' : 'border-slate-300 bg-slate-100 opacity-50 cursor-not-allowed'}`}>
         <Camera className={`h-6 w-6 ${km ? 'text-bassin' : 'text-slate-400'}`} />
         <span className={`text-base font-bold ${km ? 'text-bassin' : 'text-slate-400'}`}>{file ? file.name : 'Prendre la photo'}</span>
-        <input type="file" accept="image/*" capture="environment" disabled={!km} className="sr-only" onChange={handlePhoto} />
+        <input type="file" accept="image/*" disabled={!km} className="sr-only" onChange={handlePhoto} />
       </label>
 
       <ActionButton className="mt-6 w-full" onClick={sendTicket} disabled={!km || !file || sending}>
