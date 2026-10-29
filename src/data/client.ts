@@ -144,4 +144,6 @@ export const dataClient = {
       status: 'pending'
     })
     if (dbError) throw dbError
-  },
+  } 
+
+}
