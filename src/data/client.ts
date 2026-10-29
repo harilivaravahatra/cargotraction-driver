@@ -106,7 +106,7 @@ export const dataClient = {
   async uploadDocument(missionId: string, file: File, documentType: string): Promise<void> {
     if (isDemoMode) return
     const fileExt = file.name.split('.').pop()
-    const fileName = `${missionId}/${crypto.randomUUID()}.${fileExt}`
+    const fileName = `missions/${missionId}/${crypto.randomUUID()}.${fileExt}
     
     // 1. Upload dans le Storage
     const { error: storageError } = await supabase!.storage.from('mission-documents').upload(fileName, file)
