@@ -108,38 +108,30 @@ export const dataClient = {
     const fileExt = file.name.split('.').pop()
     const fileName = `${missionId}/${crypto.randomUUID()}.${fileExt}`
     
-    // 🔥 LOG 1 : On vérifie si le fichier est bien là
-    console.log("Début upload :", fileName, file.size, file.type);
-
-    const { error: storageError } = await supabase!.storage
-      .from('mission-documents')
-      .upload(fileName, file)
-
+    // 1. Upload dans le Storage
+    const { error: storageError } = await supabase!.storage.from('mission-documents').upload(fileName, file)
     if (storageError) {
-      console.error("ERREUR STORAGE SUPABASE :", storageError);
-      throw storageError;
+      console.error("ERREUR STORAGE :", storageError)
+      throw storageError
     }
 
-    console.log("Fichier uploadé, insertion en base...");
-
-    const { error: dbError } = await supabase!.from('mission_documents').insert({
-      mission_id: missionId,
-      document_type: documentType,
-      storage_path: fileName,
-      original_filename: file.name,
-      file_extension: fileExt,
-      mime_type: file.type,
-      size_bytes: file.size,
-      validation_status: 'pending'
+    // 2. Insertion en base via la RPC sécurisée (contourne le RLS)
+    const { error: dbError } = await supabase!.rpc('driver_insert_mission_document', {
+      p_mission_id: missionId,
+      p_document_type: documentType,
+      p_storage_path: fileName,
+      p_original_filename: file.name,
+      p_file_extension: fileExt,
+      p_mime_type: file.type,
+      p_size_bytes: file.size
     })
-
-    if (dbError) {
-      console.error("ERREUR BASE DE DONNÉES :", dbError); 
-      throw dbError;
-    }
     
-    console.log("Succès total : Document enregistré !");
+    if (dbError) {
+      console.error("ERREUR BDD :", dbError)
+      throw dbError
+    }
   },
+
 
   // 🔥 NOUVELLE FONCTION : Upload Ticket Carburant
   async uploadFuelTicket(file: File, odometerKm: number): Promise<void> {
