@@ -107,8 +107,21 @@ export const dataClient = {
     if (isDemoMode) return
     const fileExt = file.name.split('.').pop()
     const fileName = `${missionId}/${crypto.randomUUID()}.${fileExt}`
-    const { error: storageError } = await supabase!.storage.from('mission-documents').upload(fileName, file)
-    if (storageError) throw storageError
+    
+    // 🔥 LOG 1 : On vérifie si le fichier est bien là
+    console.log("Début upload :", fileName, file.size, file.type);
+
+    const { error: storageError } = await supabase!.storage
+      .from('mission-documents')
+      .upload(fileName, file)
+
+    if (storageError) {
+      console.error("ERREUR STORAGE SUPABASE :", storageError);
+      throw storageError;
+    }
+
+    console.log("Fichier uploadé, insertion en base...");
+
     const { error: dbError } = await supabase!.from('mission_documents').insert({
       mission_id: missionId,
       document_type: documentType,
@@ -119,7 +132,13 @@ export const dataClient = {
       size_bytes: file.size,
       validation_status: 'pending'
     })
-    if (dbError) throw dbError
+
+    if (dbError) {
+      console.error("ERREUR BASE DE DONNÉES :", dbError); 
+      throw dbError;
+    }
+    
+    console.log("Succès total : Document enregistré !");
   },
 
   // 🔥 NOUVELLE FONCTION : Upload Ticket Carburant
