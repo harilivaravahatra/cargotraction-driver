@@ -140,8 +140,8 @@ export const dataClient = {
     const { error: dbError } = await supabase!.from('fuel_tickets').insert({
       photo_path: fileName,
       odometer_km: odometerKm,
-      driver_id: (await supabase!.auth.getUser()).data.user?.id
+      driver_id: (await supabase!.auth.getUser()).data.user?.id,
+      status: 'pending'
     })
     if (dbError) throw dbError
-  }
-}
+  },
