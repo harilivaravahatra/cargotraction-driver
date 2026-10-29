@@ -137,13 +137,14 @@ export const dataClient = {
     if (storageError) throw storageError
 
     // 2. Insertion dans fuel_tickets
-    const { error: dbError } = await supabase!.from('fuel_tickets').insert({
-      photo_path: fileName,
-      odometer_km: odometerKm,
-      driver_id: (await supabase!.auth.getUser()).data.user?.id,
-      status: 'pending'
+    const { error: dbError } = await supabase!.rpc('driver_insert_fuel_ticket', {
+      p_photo_path: fileName,
+      p_odometer_km: odometerKm
     })
-    if (dbError) throw dbError
+    if (dbError) {
+      console.error("ERREUR BDD TICKET :", dbError)
+      throw dbError
+    }
   } 
 
 }
