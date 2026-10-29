@@ -560,7 +560,14 @@ function BottomNav({ screen, onNavigate }: { screen: Screen; onNavigate: (screen
 function NavItem({ active, icon, label, onClick }: { active: boolean; icon: React.ReactNode; label: string; onClick: () => void }) { return <button onClick={onClick} className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl text-xs font-bold ${active ? 'bg-blue-50 text-bassin' : 'text-slate-500'}`}>{<span className="[&>svg]:h-5 [&>svg]:w-5">{icon}</span>}{label}</button> }
 
 export function App() {
-  const [driver, setDriver] = useState<DriverProfile | null>(isDemoMode ? demoDriver : null)
+  const [driver, setDriver] = useState<DriverProfile | null>(() => {
+    if (isDemoMode) return demoDriver;
+    const saved = localStorage.getItem('cargotraction_driver');
+    if (saved) {
+      try { return JSON.parse(saved); } catch { return null; }
+    }
+    return null;
+  });
   const [screen, setScreen] = useState<Screen>('home')
   const [missions, setMissions] = useState<Mission[]>([])
   const [messages, setMessages] = useState<MissionMessage[]>([])
@@ -577,7 +584,13 @@ export function App() {
   useEffect(() => { const on = () => setOnline(true); const off = () => setOnline(false); window.addEventListener('online', on); window.addEventListener('offline', off); return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off) } }, [])
   useEffect(() => { if (online) void sync() }, [online, sync])
 
-  const login = async (code: string, pin: string) => { const result = await dataClient.login(code, pin); setDriver(result.driver); setNotice(result.demo ? 'Mode démo actif.' : 'Connexion réussie.') }
+  const login = async (code: string, pin: string) => { 
+    const result = await dataClient.login(code, pin); 
+    setDriver(result.driver); 
+    localStorage.setItem('cargotraction_driver', JSON.stringify(result.driver));
+    
+    setNotice(result.demo ? 'Mode démo actif.' : 'Connexion réussie.') 
+  }
   const addEvent = async (eventType: MissionEvent['event_type'], payload: Record<string, unknown>) => { 
     const missionId = selected?.id ?? String(payload.mission_id ?? ''); 
     if (!missionId) return; 
