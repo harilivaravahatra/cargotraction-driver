@@ -26,7 +26,6 @@ export const dataClient = {
   async getMissions(): Promise<Mission[]> {
     if (isDemoMode) return clone(demoMissions)
     
-    // 1. On récupère les missions avec leurs étapes
     const { data: missionsData, error: missionsError } = await supabase!
       .from('missions')
       .select('*, mission_stops(*)')
@@ -34,23 +33,19 @@ export const dataClient = {
     
     if (missionsError) throw missionsError
 
-    // 2. On récupère TOUS les terminaux pour avoir leurs codes
     const { data: terminalsData, error: terminalsError } = await supabase!
       .from('container_terminals')
       .select('id, terminal_code')
     
     if (terminalsError) throw terminalsError
 
-    // 3. On crée un dictionnaire pour retrouver le code à partir de l'ID du terminal
     const terminalsMap = new Map(
       (terminalsData ?? []).map(t => [t.id, t.terminal_code])
     )
 
-    // 4. On assemble le tout
     return (missionsData ?? []).map((row: any) => {
       const stops = (row.mission_stops ?? []).map((stop: any) => ({
         ...stop,
-        // Si l'étape a un terminal_id, on va chercher son code. Sinon undefined.
         terminal_code: stop.terminal_id ? terminalsMap.get(stop.terminal_id) : undefined
       }))
       return { ...row, stops } as Mission
@@ -106,7 +101,7 @@ export const dataClient = {
   async uploadDocument(missionId: string, file: File, documentType: string): Promise<void> {
     if (isDemoMode) return
     const fileExt = file.name.split('.').pop()
-    const fileName = `missions/${missionId}/${crypto.randomUUID()}.${fileExt}
+    const fileName = `missions/${missionId}/${crypto.randomUUID()}.${fileExt}`
     
     // 1. Upload dans le Storage
     const { error: storageError } = await supabase!.storage.from('mission-documents').upload(fileName, file)
@@ -115,7 +110,7 @@ export const dataClient = {
       throw storageError
     }
 
-    // 2. Insertion en base via la RPC sécurisée (contourne le RLS)
+    // 2. Insertion en base via la RPC sécurisée
     const { error: dbError } = await supabase!.rpc('driver_insert_mission_document', {
       p_mission_id: missionId,
       p_document_type: documentType,
@@ -132,8 +127,6 @@ export const dataClient = {
     }
   },
 
-
-  // 🔥 NOUVELLE FONCTION : Upload Ticket Carburant
   async uploadFuelTicket(file: File, odometerKm: number): Promise<void> {
     if (isDemoMode) return
     const fileExt = file.name.split('.').pop()
