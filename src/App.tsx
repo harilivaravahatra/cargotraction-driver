@@ -243,7 +243,7 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
       }
       // Si c'est un PDF, on l'envoie tel quel
       
-      await dataClient.uploadFile ? await dataClient.uploadDocument(mission.id, finalFile, 'cmr') : null
+      await dataClient.uploadDocument(mission.id, finalFile, 'cmr')
       
       setHasCmr(true) 
       setPhotoNotice(`CMR envoyé avec succès ! En attente de validation par le bureau.`); 
