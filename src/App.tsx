@@ -13,6 +13,45 @@ import { ActionButton, NetworkBadge, StatusPill } from './components/ui'
 import { usePwaInstall } from './hooks/usePwaInstall'
 import { hasInvalidContainerNumber, normalizeContainerNumber } from './lib/containerIso6346'
 
+const compressImage = async (file: File): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1200; // Taille max (suffisant pour un CMR)
+        const MAX_HEIGHT = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+        } else {
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+          } else {
+            reject(new Error('Compression failed'));
+          }
+        }, 'image/jpeg', 0.7); // Qualité 70% (très lisible, très léger)
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
+
 function formatContainerNumber(value?: string | null): string {
   const clean = (value || "").replace(/\s+/g, "").toUpperCase();
   if (clean.length <= 4) return clean;
@@ -191,13 +230,18 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
   const onCmrPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => { 
     const file = event.target.files?.[0]; 
     if (!file) return; 
+    
     setIsUploading(true); 
-    setPhotoNotice('Envoi du CMR en cours...');
+    setPhotoNotice('Compression et envoi du CMR en cours...');
+    
     try {
-      await dataClient.uploadDocument(mission.id, file, 'cmr')
+      const compressedFile = await compressImage(file);
+      
+      await dataClient.uploadDocument(mission.id, compressedFile, 'cmr')
       setHasCmr(true) 
-      setPhotoNotice(`CMR « ${file.name} » envoyé avec succès ! En attente de validation par le bureau.`); 
+      setPhotoNotice(`CMR envoyé avec succès ! En attente de validation par le bureau.`); 
     } catch (err) {
+      console.error(err);
       setPhotoNotice('Erreur lors de l\'envoi du CMR. Veuillez réessayer.');
     } finally {
       setIsUploading(false); 
@@ -548,6 +592,21 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
           <ActionButton type="submit" disabled={loading} className="w-full">{loading ? 'Enregistrement…' : 'Changer mon code PIN'}</ActionButton>
         </form>
       </section>
+    <section className="mt-8 border-t border-slate-200 pt-6">
+        <button
+          onClick={() => {
+            localStorage.removeItem('cargotraction_driver');
+            window.location.reload(); // Recharge l'app pour vider la mémoire et afficher le login
+          }}
+          className="w-full rounded-xl border-2 border-rose-200 bg-rose-50 py-3 text-base font-bold text-rose-700 hover:bg-rose-100 transition"
+        >
+          Se déconnecter
+        </button>
+        <p className="text-center text-xs text-slate-400 mt-3">
+          Version de l'application : 1.0.0
+        </p>
+      </section>
+
     </main>
   )
 }
