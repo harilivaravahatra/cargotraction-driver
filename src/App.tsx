@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+﻿import { useCallback, useEffect, useState } from 'react'
 import {
   ArrowLeft, Camera, Check, CheckCircle2, ChevronDown, ChevronRight, ClipboardList, CloudOff,
   FileText, Fuel, History, Home, Info, MapPin, Menu, MessageCircle, Navigation, Phone,
@@ -67,8 +67,8 @@ const timeFormatter = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute
 const dateFormatter = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' })
 
 function formatDate(date?: string | null) {
-  if (!date) return 'À confirmer'
-  return `${dateFormatter.format(new Date(date))} · ${timeFormatter.format(new Date(date))}`
+  if (!date) return 'Ã€ confirmer'
+  return `${dateFormatter.format(new Date(date))} Â· ${timeFormatter.format(new Date(date))}`
 }
 
 function mapUrl(address: string) {
@@ -80,12 +80,12 @@ function stopLabel(type: string) {
   if (type === 'delivery') return 'Livraison'
   if (type === 'terminal') return 'Terminal'
   if (type === 'port') return 'Terminal de sortie'
-  if (type === 'return') return "Terminal d'entrée"
+  if (type === 'return') return "Terminal d'entrÃ©e"
   if (type === 'depot') return 'POSIT'
-  return 'Étape'
+  return 'Ã‰tape'
 }
 
-// 🔥 Composant Accordéon
+// ðŸ”¥ Composant AccordÃ©on
 function AccordionSection({ title, icon, children, defaultOpen = false }: { title: string, icon: React.ReactNode, children: React.ReactNode, defaultOpen?: boolean }) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
   return (
@@ -110,10 +110,10 @@ function LoginView({ onLogin }: { onLogin: (code: string, pin: string) => Promis
   
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (!code.trim() || !/^\d{4,6}$/.test(pin)) { setError('Saisissez un matricule et un PIN de 4 à 6 chiffres.'); return }
+    if (!code.trim() || !/^\d{4,6}$/.test(pin)) { setError('Saisissez un matricule et un PIN de 4 Ã  6 chiffres.'); return }
     setBusy(true); setError('')
     try { await onLogin(code.trim(), pin) } 
-    catch { setError('Connexion impossible. Vérifiez vos identifiants ou votre réseau.') } 
+    catch { setError('Connexion impossible. VÃ©rifiez vos identifiants ou votre rÃ©seau.') } 
     finally { setBusy(false) }
   }
   
@@ -127,12 +127,12 @@ function LoginView({ onLogin }: { onLogin: (code: string, pin: string) => Promis
           <p className="mt-3 text-base leading-7 text-slate-600">Connectez-vous avec votre matricule et votre code personnel.</p>
           <form onSubmit={submit} className="mt-7 space-y-5">
             <label className="block"><span className="mb-2 block text-base font-bold text-slate-800">Matricule chauffeur</span><input value={code} onChange={(e) => setCode(e.target.value)} autoComplete="username" placeholder="Ex. CT-042" className="min-h-14 w-full rounded-xl border-2 border-slate-200 px-4 text-lg uppercase outline-none focus:border-bassin" /></label>
-            <label className="block"><span className="mb-2 block text-base font-bold text-slate-800">PIN (4 à 6 chiffres)</span><input value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" type="password" autoComplete="one-time-code" placeholder="••••" className="min-h-14 w-full rounded-xl border-2 border-slate-200 px-4 text-2xl tracking-[0.35em] outline-none focus:border-bassin" /></label>
+            <label className="block"><span className="mb-2 block text-base font-bold text-slate-800">PIN (4 Ã  6 chiffres)</span><input value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" type="password" autoComplete="one-time-code" placeholder="â€¢â€¢â€¢â€¢" className="min-h-14 w-full rounded-xl border-2 border-slate-200 px-4 text-2xl tracking-[0.35em] outline-none focus:border-bassin" /></label>
             {error && <p role="alert" className="rounded-xl bg-rose-50 p-3 text-base font-semibold text-rose-800">{error}</p>}
-            <ActionButton type="submit" className="w-full" disabled={busy}>{busy ? 'Connexion…' : 'Se connecter'}</ActionButton>
+            <ActionButton type="submit" className="w-full" disabled={busy}>{busy ? 'Connexionâ€¦' : 'Se connecter'}</ActionButton>
             {canInstall && (
               <button type="button" onClick={promptInstall} className="w-full mt-2 rounded-xl border-2 border-bassin bg-white px-4 py-3 text-base font-bold text-bassin hover:bg-blue-50">
-                📲 Installer l'application
+                ðŸ“² Installer l'application
               </button>
             )}
           </form>
@@ -143,7 +143,7 @@ function LoginView({ onLogin }: { onLogin: (code: string, pin: string) => Promis
 }
 
 function Header({ driver, online, pendingCount, syncing, onHome, onMenu }: { driver: DriverProfile; online: boolean; pendingCount: number; syncing: boolean; onHome: () => void; onMenu: () => void }) {
-  return <header className="safe-top sticky top-0 z-20 bg-bassin px-4 pb-3 text-white shadow-lg"><div className="mx-auto flex max-w-2xl items-center justify-between gap-3"><button onClick={onHome} className="rounded-xl p-1" aria-label="Accueil"><LogoSlot compact /></button><div className="flex items-center gap-2"><NetworkBadge online={online} pendingCount={pendingCount} syncing={syncing} /><button onClick={onMenu} className="rounded-xl p-3 hover:bg-white/10" aria-label="Menu"><Menu className="h-6 w-6" /></button></div></div><div className="mx-auto mt-2 flex max-w-2xl items-center gap-2 text-sm text-white/80"><div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 font-bold">{driver.first_name[0]}{driver.last_name[0]}</div><span>{driver.first_name} {driver.last_name} · {driver.employee_code}</span></div></header>
+  return <header className="safe-top sticky top-0 z-20 bg-bassin px-4 pb-3 text-white shadow-lg"><div className="mx-auto flex max-w-2xl items-center justify-between gap-3"><button onClick={onHome} className="rounded-xl p-1" aria-label="Accueil"><LogoSlot compact /></button><div className="flex items-center gap-2"><NetworkBadge online={online} pendingCount={pendingCount} syncing={syncing} /><button onClick={onMenu} className="rounded-xl p-3 hover:bg-white/10" aria-label="Menu"><Menu className="h-6 w-6" /></button></div></div><div className="mx-auto mt-2 flex max-w-2xl items-center gap-2 text-sm text-white/80"><div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/15 font-bold">{driver.first_name[0]}{driver.last_name[0]}</div><span>{driver.first_name} {driver.last_name} Â· {driver.employee_code}</span></div></header>
 }
 
 function PageTitle({ title, subtitle, onBack }: { title: string; subtitle?: string; onBack?: () => void }) {
@@ -152,7 +152,7 @@ function PageTitle({ title, subtitle, onBack }: { title: string; subtitle?: stri
 
 function MissionCard({ mission, onOpen }: { mission: Mission; onOpen: () => void }) {
   const displayNumber = (mission as any).dossier_number || mission.mission_number;
-  return <button onClick={onOpen} className="w-full rounded-2xl bg-white p-5 text-left shadow-card transition hover:-translate-y-0.5 hover:shadow-lg"><div className="flex items-start justify-between gap-3"><div><p className="font-mono text-sm font-bold text-bassin">{displayNumber}</p><h3 className="mt-1 text-lg font-extrabold text-slate-900">{mission.origin_label_snapshot ?? mission.pickup_address ?? 'Origine à confirmer'}</h3></div><StatusPill status={mission.status} /></div><div className="mt-4 flex items-center gap-3 text-slate-700"><div className="h-px flex-1 bg-slate-200" /><ChevronRight className="h-5 w-5 text-bassin" /><div className="h-px flex-1 bg-slate-200" /></div><p className="mt-3 text-base font-semibold text-slate-800">{mission.destination_label_snapshot ?? mission.delivery_address ?? 'Destination à confirmer'}</p><div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-600"><span>{formatDate(mission.planned_pickup_at)}</span>{mission.container_number && <span className="font-mono font-bold">{mission.container_number}</span>}</div></button>
+  return <button onClick={onOpen} className="w-full rounded-2xl bg-white p-5 text-left shadow-card transition hover:-translate-y-0.5 hover:shadow-lg"><div className="flex items-start justify-between gap-3"><div><p className="font-mono text-sm font-bold text-bassin">{displayNumber}</p><h3 className="mt-1 text-lg font-extrabold text-slate-900">{mission.origin_label_snapshot ?? mission.pickup_address ?? 'Origine Ã  confirmer'}</h3></div><StatusPill status={mission.status} /></div><div className="mt-4 flex items-center gap-3 text-slate-700"><div className="h-px flex-1 bg-slate-200" /><ChevronRight className="h-5 w-5 text-bassin" /><div className="h-px flex-1 bg-slate-200" /></div><p className="mt-3 text-base font-semibold text-slate-800">{mission.destination_label_snapshot ?? mission.delivery_address ?? 'Destination Ã  confirmer'}</p><div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-600"><span>{formatDate(mission.planned_pickup_at)}</span>{mission.container_number && <span className="font-mono font-bold">{mission.container_number}</span>}</div></button>
 }
 
 function HomeScreen({ missions, messages, onNavigate, onMission }: { missions: Mission[]; messages: MissionMessage[]; onNavigate: (screen: Screen) => void; onMission: (mission: Mission) => void }) {
@@ -161,17 +161,17 @@ function HomeScreen({ missions, messages, onNavigate, onMission }: { missions: M
   
   return <main className="space-y-6">
     <section className="rounded-2xl bg-gradient-to-br from-bassin to-bassin-dark px-5 py-3 text-white shadow-card">
-      <p className="text-sm font-bold uppercase tracking-[0.18em] text-white/70">Aujourd’hui</p>
+      <p className="text-sm font-bold uppercase tracking-[0.18em] text-white/70">Aujourdâ€™hui</p>
     </section>
 
     <section className="grid gap-3" aria-label="Actions principales">
-      <button onClick={() => onNavigate('missions')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-800"><ClipboardList className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Mes missions</span><span className="block text-sm text-slate-600">{active.length} mission{active.length > 1 ? 's' : ''} à traiter</span></span><span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-extrabold text-blue-900">{active.length}</span></button>
-      <button onClick={() => onNavigate('fuel')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800"><Fuel className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Carburant</span><span className="block text-sm text-slate-600">Ticket & kilométrage</span></span><ChevronRight className="h-6 w-6 text-slate-400" /></button>
-      <button onClick={() => onNavigate('messages')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-800"><MessageCircle className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Messages</span><span className="block text-sm text-slate-600">Échangez avec le dispatch</span></span>{unread > 0 && <span className="rounded-full bg-violet-100 px-3 py-1 text-sm font-extrabold text-violet-900">{unread}</span>}</button>
+      <button onClick={() => onNavigate('missions')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-800"><ClipboardList className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Mes missions</span><span className="block text-sm text-slate-600">{active.length} mission{active.length > 1 ? 's' : ''} Ã  traiter</span></span><span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-extrabold text-blue-900">{active.length}</span></button>
+      <button onClick={() => onNavigate('fuel')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-800"><Fuel className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Carburant</span><span className="block text-sm text-slate-600">Ticket & kilomÃ©trage</span></span><ChevronRight className="h-6 w-6 text-slate-400" /></button>
+      <button onClick={() => onNavigate('messages')} className="flex min-h-20 items-center gap-4 rounded-2xl bg-white p-4 text-left shadow-card"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-800"><MessageCircle className="h-7 w-7" /></span><span className="flex-1"><span className="block text-lg font-extrabold text-slate-900">Messages</span><span className="block text-sm text-slate-600">Ã‰changez avec le dispatch</span></span>{unread > 0 && <span className="rounded-full bg-violet-100 px-3 py-1 text-sm font-extrabold text-violet-900">{unread}</span>}</button>
     </section>
     
-    {active[0] && <section><div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-extrabold text-slate-900">Prochaine priorité</h2><button onClick={() => onNavigate('missions')} className="text-base font-bold text-bassin">Tout voir</button></div><MissionCard mission={active[0]} onOpen={() => onMission(active[0])} /></section>}
-    <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600"><Info className="mt-0.5 h-5 w-5 shrink-0 text-bassin" /><p>Le suivi est basé uniquement sur vos validations et vos documents.</p></div>
+    {active[0] && <section><div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-extrabold text-slate-900">Prochaine prioritÃ©</h2><button onClick={() => onNavigate('missions')} className="text-base font-bold text-bassin">Tout voir</button></div><MissionCard mission={active[0]} onOpen={() => onMission(active[0])} /></section>}
+    <div className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600"><Info className="mt-0.5 h-5 w-5 shrink-0 text-bassin" /><p>Le suivi est basÃ© uniquement sur vos validations et vos documents.</p></div>
   </main>
 }
 
@@ -180,17 +180,17 @@ function MissionsScreen({ missions, onOpen, onBack }: { missions: Mission[]; onO
   const history = missions.filter((m) => !['planned', 'in_progress'].includes(m.status))
   
   return <main>
-    <PageTitle title="Mes missions" subtitle="La feuille de transport, en temps réel." onBack={onBack} />
+    <PageTitle title="Mes missions" subtitle="La feuille de transport, en temps rÃ©el." onBack={onBack} />
     <section className="space-y-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-extrabold text-slate-900">À traiter</h2>
+        <h2 className="text-lg font-extrabold text-slate-900">Ã€ traiter</h2>
         <span className="text-sm font-bold text-slate-500">{active.length}</span>
       </div>
       {active.length ? active.map((mission) => <MissionCard key={mission.id} mission={mission} onOpen={() => onOpen(mission)} />) : <EmptyState text="Aucune mission en cours." />}
     </section>
     
-    {/* 🔥 HISTORIQUE REPLIÉ */}
-    <AccordionSection title="Historique récent" icon={<History className="h-5 w-5 text-bassin" />} defaultOpen={false}>
+    {/* ðŸ”¥ HISTORIQUE REPLIÃ‰ */}
+    <AccordionSection title="Historique rÃ©cent" icon={<History className="h-5 w-5 text-bassin" />} defaultOpen={false}>
       <div className="space-y-3">
         {history.length ? history.map((mission) => <MissionCard key={mission.id} mission={mission} onOpen={() => onOpen(mission)} />) : <EmptyState text="Aucune mission dans l'historique." />}
       </div>
@@ -202,8 +202,8 @@ function EmptyState({ text }: { text: string }) { return <div className="rounded
 
 function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Mission; onBack: () => void; onEvent: (eventType: MissionEvent['event_type'], payload: Record<string, unknown>) => Promise<void>; onRefresh: () => void }) {
   const [km, setKm] = useState({ departure: '', arrival: '' })
-  const [savedKm, setSavedKm] = useState({ departure: false, arrival: false }) // 🔥 Pour le bouton final
-  const [hasCmr, setHasCmr] = useState(false) // 🔥 Pour le bouton final
+  const [savedKm, setSavedKm] = useState({ departure: false, arrival: false }) // ðŸ”¥ Pour le bouton final
+  const [hasCmr, setHasCmr] = useState(false) // ðŸ”¥ Pour le bouton final
   const [photoNotice, setPhotoNotice] = useState('')
   const [events, setEvents] = useState<any[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -222,10 +222,10 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
   
   const saveKm = async (kind: 'departure' | 'arrival') => { 
     const value = Number(km[kind]); 
-    if (!value || value < 0) { setPhotoNotice('Saisissez une valeur kilométrique valide.'); return }; 
+    if (!value || value < 0) { setPhotoNotice('Saisissez une valeur kilomÃ©trique valide.'); return }; 
     await onEvent('odometer', { reading_type: kind, value_km: value }); 
-    setSavedKm(prev => ({ ...prev, [kind]: true })) // 🔥 On marque comme enregistré
-    setPhotoNotice('Relevé kilométrique enregistré.'); 
+    setSavedKm(prev => ({ ...prev, [kind]: true })) // ðŸ”¥ On marque comme enregistrÃ©
+    setPhotoNotice('RelevÃ© kilomÃ©trique enregistrÃ©.'); 
   }
 
   const onCmrPhoto = async (event: React.ChangeEvent<HTMLInputElement>) => { 
@@ -246,10 +246,10 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
       await dataClient.uploadDocument(mission.id, finalFile, 'cmr')
       
       setHasCmr(true) 
-      setPhotoNotice(`CMR envoyé avec succès ! En attente de validation par le bureau.`); 
+      setPhotoNotice(`CMR envoyÃ© avec succÃ¨s ! En attente de validation par le bureau.`); 
     } catch (err) {
       console.error(err);
-      setPhotoNotice('Erreur lors de l\'envoi du CMR. Veuillez réessayer.');
+      setPhotoNotice('Erreur lors de l\'envoi du CMR. Veuillez rÃ©essayer.');
     } finally {
       setIsUploading(false); 
     }
@@ -257,14 +257,14 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
 
   const declareAvailable = async () => {
     await onEvent('status', { status: 'available' })
-    setPhotoNotice('Mission terminée ! Vous êtes déclaré disponible pour une nouvelle mission.')
+    setPhotoNotice('Mission terminÃ©e ! Vous Ãªtes dÃ©clarÃ© disponible pour une nouvelle mission.')
   }
 
-  // 🔥 Condition pour activer le bouton du bas
+  // ðŸ”¥ Condition pour activer le bouton du bas
   const canDeclareAvailable = hasEvent('in_progress') && hasEvent('arrived') && hasEvent('completed') && hasCmr && savedKm.departure && savedKm.arrival;
 
   const displayNumber = (mission as any).dossier_number || mission.mission_number;
-  const clientRef = (mission as any).client_order_reference ? `Réf. client : ${(mission as any).client_order_reference}` : 'Ordre client non renseigné';
+  const clientRef = (mission as any).client_order_reference ? `RÃ©f. client : ${(mission as any).client_order_reference}` : 'Ordre client non renseignÃ©';
 
   const getContainers = () => {
     const list = [];
@@ -273,7 +273,7 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
     const cReturn = (mission as any).container_number_return;
     const sameReturn = (mission as any).same_return_container !== false;
     
-    const formatType = (t?: string | null) => t ? t.replace('DV', 'DRY') : 'Type non renseigné';
+    const formatType = (t?: string | null) => t ? t.replace('DV', 'DRY') : 'Type non renseignÃ©';
 
     if (c1) list.push({ label: (c2 || (!sameReturn && cReturn)) ? 'Aller' : 'Conteneur', num: formatContainerNumber(c1), type: formatType(mission.container_type) });
     if (c2) list.push({ label: 'Aller 2', num: formatContainerNumber(c2), type: formatType((mission as any).container_type_2) });
@@ -287,7 +287,7 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
   const opLabel = opType === 'round_trip' ? 'Aller-Retour' : opType === 'one_way' ? 'Aller Simple' : 'Triangulaire';
 
   return <main className="pb-28">
-    <PageTitle title={displayNumber} subtitle={`${clientRef} · ${formatDate(mission.planned_pickup_at)}`} onBack={onBack} />
+    <PageTitle title={displayNumber} subtitle={`${clientRef} Â· ${formatDate(mission.planned_pickup_at)}`} onBack={onBack} />
     
     <div className="mb-4 flex gap-2">
       <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${isImport ? 'bg-indigo-100 text-indigo-800' : 'bg-amber-100 text-amber-800'}`}>{isImport ? 'IMPORT' : 'EXPORT'}</span>
@@ -309,7 +309,7 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
           className={`min-h-12 rounded-lg px-2 text-sm font-bold transition-colors ${hasEvent('arrived') ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}
           onClick={() => saveStatus('arrived')}
         >
-          {isImport ? 'Livré' : 'Récupéré'}
+          {isImport ? 'LivrÃ©' : 'RÃ©cupÃ©rÃ©'}
         </button>
         <button 
           className={`min-h-12 rounded-lg px-2 text-sm font-bold transition-colors ${hasEvent('completed') ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}
@@ -320,7 +320,7 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
       </div>
     </section>
 
-    {/* 🔥 ACCORDÉON OUVERT PAR DÉFAUT */}
+    {/* ðŸ”¥ ACCORDÃ‰ON OUVERT PAR DÃ‰FAUT */}
     <AccordionSection title="Conteneur(s)" icon={<Truck className="h-5 w-5 text-bassin" />} defaultOpen={true}>
       <div className="space-y-3">
         {containers.length > 0 ? containers.map((c, i) => (
@@ -328,20 +328,20 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase">{c.label}</p>
               <p className="text-lg font-extrabold text-bassin tracking-wider">{c.num}</p>
-              {(mission as any).loading_reference && <p className="text-xs font-semibold text-slate-600 mt-1">Réf. chargement : {(mission as any).loading_reference}</p>}
+              {(mission as any).loading_reference && <p className="text-xs font-semibold text-slate-600 mt-1">RÃ©f. chargement : {(mission as any).loading_reference}</p>}
             </div>
             <div className="text-right">
               <p className="text-sm font-semibold text-slate-700">{c.type}</p>
             </div>
           </div>
         )) : (
-          <p className="text-sm text-slate-500 italic p-3 bg-slate-50 rounded-xl border border-slate-200">Aucun numéro de conteneur renseigné. Contactez le dispatch.</p>
+          <p className="text-sm text-slate-500 italic p-3 bg-slate-50 rounded-xl border border-slate-200">Aucun numÃ©ro de conteneur renseignÃ©. Contactez le dispatch.</p>
         )}
       </div>
     </AccordionSection>
     
-    {/* 🔥 ACCORDÉON OUVERT PAR DÉFAUT */}
-    <AccordionSection title="Étapes" icon={<Navigation className="h-5 w-5 text-bassin" />} defaultOpen={true}>
+    {/* ðŸ”¥ ACCORDÃ‰ON OUVERT PAR DÃ‰FAUT */}
+    <AccordionSection title="Ã‰tapes" icon={<Navigation className="h-5 w-5 text-bassin" />} defaultOpen={true}>
       <div className="space-y-5">
         {mission.stops.map((stop, index) => <div key={stop.id} className="relative pl-9">
           {index < mission.stops.length - 1 && <span className="absolute left-[11px] top-7 h-full w-0.5 bg-slate-200" />}
@@ -350,76 +350,76 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold uppercase tracking-wide text-bassin">{stopLabel(stop.stop_type)}</p>
               
-              {/* 🔥 CODE TERMINAL */}
+              {/* ðŸ”¥ CODE TERMINAL */}
               <p className="mt-1 text-base font-bold text-slate-900">
                 {stop.terminal_code || stop.location_label_snapshot || stop.address_snapshot}
               </p>
               
               <p className="mt-1 text-sm leading-6 text-slate-600">{stop.address_snapshot}</p>
-              {stop.planned_at && <p className="mt-2 text-sm font-semibold text-slate-600">Prévu : {formatDate(stop.planned_at)}</p>}
+              {stop.planned_at && <p className="mt-2 text-sm font-semibold text-slate-600">PrÃ©vu : {formatDate(stop.planned_at)}</p>}
               {stop.instructions && <p className="mt-2 rounded-lg bg-amber-50 p-2 text-sm text-amber-900">{stop.instructions}</p>}
             </div>
             <div className="flex shrink-0 gap-2">
               {stop.phone && <a href={`tel:${stop.phone}`} className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800" aria-label={`Appeler ${stop.phone}`}><Phone className="h-5 w-5" /></a>}
-              <a href={mapUrl(stop.address_snapshot)} target="_blank" rel="noreferrer" className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-800" aria-label="Ouvrir l’itinéraire"><MapPin className="h-5 w-5" /></a>
+              <a href={mapUrl(stop.address_snapshot)} target="_blank" rel="noreferrer" className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-800" aria-label="Ouvrir lâ€™itinÃ©raire"><MapPin className="h-5 w-5" /></a>
             </div>
           </div>
         </div>)}
       </div>
     </AccordionSection>
 
-    {/* 🔥 ACCORDÉON REPLIÉ PAR DÉFAUT */}
-    <AccordionSection title="Détails transport" icon={<Truck className="h-5 w-5 text-bassin" />} defaultOpen={false}>
+    {/* ðŸ”¥ ACCORDÃ‰ON REPLIÃ‰ PAR DÃ‰FAUT */}
+    <AccordionSection title="DÃ©tails transport" icon={<Truck className="h-5 w-5 text-bassin" />} defaultOpen={false}>
       <dl className="grid grid-cols-2 gap-x-4 gap-y-4 text-base">
-        <DataItem label="Poids brut" value={mission.gross_weight_kg ? `${mission.gross_weight_kg.toLocaleString('fr-FR')} kg` : 'Non renseigné'} />
-        <DataItem label="Plomb" value={mission.seal_number ?? 'À contrôler'} />
-        <DataItem label="Booking" value={mission.booking_reference ?? 'Non renseigné'} />
-        <DataItem label="IMCO / ONU" value={mission.imdg_un_number ?? 'Non renseigné'} />
+        <DataItem label="Poids brut" value={mission.gross_weight_kg ? `${mission.gross_weight_kg.toLocaleString('fr-FR')} kg` : 'Non renseignÃ©'} />
+        <DataItem label="Plomb" value={mission.seal_number ?? 'Ã€ contrÃ´ler'} />
+        <DataItem label="Booking" value={mission.booking_reference ?? 'Non renseignÃ©'} />
+        <DataItem label="IMCO / ONU" value={mission.imdg_un_number ?? 'Non renseignÃ©'} />
       </dl>
       {mission.notes && <p className="mt-5 border-t border-slate-100 pt-4 text-base leading-7 text-slate-700"><strong>Consignes :</strong> {mission.notes}</p>}
     </AccordionSection>
 
-    {/* 🔥 ACCORDÉON OUVERT PAR DÉFAUT */}
-    <AccordionSection title="Compteur kilométrique" icon={<span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-bassin text-[10px] font-black text-bassin">km</span>} defaultOpen={true}>
-      <p className="text-sm leading-6 text-slate-600 mb-4">Saisissez la valeur relevée sur le tableau de bord.</p>
+    {/* ðŸ”¥ ACCORDÃ‰ON OUVERT PAR DÃ‰FAUT */}
+    <AccordionSection title="Compteur kilomÃ©trique" icon={<span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-bassin text-[10px] font-black text-bassin">km</span>} defaultOpen={true}>
+      <p className="text-sm leading-6 text-slate-600 mb-4">Saisissez la valeur relevÃ©e sur le tableau de bord.</p>
       <div className="grid gap-4 sm:grid-cols-2">
         {(['departure', 'arrival'] as const).map((kind) => (
           <div key={kind} className={`rounded-xl border p-4 ${savedKm[kind] ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200'}`}>
-            <p className="font-bold text-slate-900">Kilométrage {kind === 'departure' ? 'départ' : 'arrivée'}</p>
+            <p className="font-bold text-slate-900">KilomÃ©trage {kind === 'departure' ? 'dÃ©part' : 'arrivÃ©e'}</p>
             <input type="number" min="0" inputMode="numeric" placeholder="Ex: 125000" value={km[kind]} onChange={(e) => { setKm({ ...km, [kind]: e.target.value }); setSavedKm(prev => ({...prev, [kind]: false})) }} className="mt-3 min-h-12 w-full rounded-lg border-2 border-slate-200 px-3 text-base" />
             <ActionButton variant={savedKm[kind] ? 'primary' : 'secondary'} className={`mt-3 w-full text-sm ${savedKm[kind] ? 'bg-emerald-600 text-white' : ''}`} onClick={() => saveKm(kind)}>
-              {savedKm[kind] ? 'Enregistré ✓' : 'Enregistrer'}
+              {savedKm[kind] ? 'EnregistrÃ© âœ“' : 'Enregistrer'}
             </ActionButton>
           </div>
         ))}
       </div>
     </AccordionSection>
 
-    {/* 🔥 CMR */}
+    {/* ðŸ”¥ CMR */}
     <section className="mt-4 rounded-2xl bg-white p-5 shadow-card">
       <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900"><FileText className="h-5 w-5 text-bassin" />CMR / Bon de livraison</h2>
-      <p className="mt-1 text-sm leading-6 text-slate-600">Prenez en photo le CMR signé pour cette mission.</p>
+      <p className="mt-1 text-sm leading-6 text-slate-600">Prenez en photo le CMR signÃ© pour cette mission.</p>
       <label className={`mt-4 flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 text-base font-bold ${hasCmr ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-bassin text-bassin'} ${isUploading ? 'opacity-50 cursor-wait' : ''}`}>
         {isUploading ? <CloudOff className="h-5 w-5 animate-pulse" /> : hasCmr ? <CheckCircle2 className="h-5 w-5" /> : <Camera className="h-5 w-5" />}
-        {isUploading ? 'Envoi en cours...' : hasCmr ? 'CMR envoyé ✓' : 'Photographier le CMR'}
+        {isUploading ? 'Envoi en cours...' : hasCmr ? 'CMR envoyÃ© âœ“' : 'Photographier le CMR'}
         <input type="file" accept="image/*,application/pdf" className="sr-only" onChange={onCmrPhoto} disabled={isUploading} />
       </label>
     </section>
 
     {photoNotice && <div className="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-900"><Info className="mt-0.5 h-5 w-5 shrink-0" />{photoNotice}</div>}
 
-    {/* 🔥 BOUTON FINAL DE DISPONIBILITÉ */}
+    {/* ðŸ”¥ BOUTON FINAL DE DISPONIBILITÃ‰ */}
     <section className="mt-6">
       <button 
         onClick={declareAvailable} 
         disabled={!canDeclareAvailable}
         className={`w-full rounded-2xl p-5 text-lg font-bold shadow-lg transition-all ${canDeclareAvailable ? 'bg-bassin text-white hover:bg-bassin-dark' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
       >
-        Terminer la mission et déclarer ma disponibilité
+        Terminer la mission et dÃ©clarer ma disponibilitÃ©
       </button>
       {!canDeclareAvailable && (
         <p className="text-center text-xs text-slate-500 mt-2">
-          (Complétez les 3 statuts, le CMR et les kilométrages pour activer)
+          (ComplÃ©tez les 3 statuts, le CMR et les kilomÃ©trages pour activer)
         </p>
       )}
     </section>
@@ -429,7 +429,7 @@ function MissionDetail({ mission, onBack, onEvent, onRefresh }: { mission: Missi
 
 function DataItem({ label, value }: { label: string; value: string }) { return <div><dt className="text-sm text-slate-500">{label}</dt><dd className="mt-1 break-words font-semibold text-slate-900">{value}</dd></div> }
 
-// 🔥 NOUVEL ÉCRAN CARBURANT
+// ðŸ”¥ NOUVEL Ã‰CRAN CARBURANT
 function FuelScreen({ onBack, onEvent }: { onBack: () => void; onEvent: (eventType: MissionEvent['event_type'], payload: Record<string, unknown>) => Promise<void> }) {
   const [km, setKm] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -446,7 +446,7 @@ function FuelScreen({ onBack, onEvent }: { onBack: () => void; onEvent: (eventTy
     setSending(true)
     try {
       await dataClient.uploadFuelTicket(file, Number(km))
-      setNotice('Ticket carburant envoyé avec succès !')
+      setNotice('Ticket carburant envoyÃ© avec succÃ¨s !')
       setKm('')
       setFile(null)
     } catch (err) {
@@ -457,10 +457,10 @@ function FuelScreen({ onBack, onEvent }: { onBack: () => void; onEvent: (eventTy
   }
 
   return <main>
-    <PageTitle title="Ticket Carburant" subtitle="Saisissez le kilométrage et prenez la photo." onBack={onBack} />
+    <PageTitle title="Ticket Carburant" subtitle="Saisissez le kilomÃ©trage et prenez la photo." onBack={onBack} />
     <section className="rounded-2xl bg-white p-5 shadow-card">
       <label className="block mb-6">
-        <span className="mb-2 block text-base font-bold text-slate-800">Kilométrage au compteur *</span>
+        <span className="mb-2 block text-base font-bold text-slate-800">KilomÃ©trage au compteur *</span>
         <input type="number" min="0" inputMode="numeric" placeholder="Ex: 125000" value={km} onChange={(e) => setKm(e.target.value)} className="min-h-14 w-full rounded-xl border-2 border-slate-200 px-4 text-2xl outline-none focus:border-bassin" />
       </label>
 
@@ -487,12 +487,12 @@ function MessagesScreen({ messages, missions, onBack, onSend }: { messages: Miss
   const [body, setBody] = useState('')
   const visible = messages.filter((message) => message.mission_id === missionId)
   
-  // 🔥 Vérification de la validité du conteneur
+  // ðŸ”¥ VÃ©rification de la validitÃ© du conteneur
   const isInvalidContainer = messageType === 'container' && hasInvalidContainerNumber(body);
   
   const send = async () => { 
     if (!body.trim() || isInvalidContainer) return; 
-    // Si c'est un conteneur, on le nettoie (enlève les espaces) avant l'envoi
+    // Si c'est un conteneur, on le nettoie (enlÃ¨ve les espaces) avant l'envoi
     const finalBody = messageType === 'container' ? normalizeContainerNumber(body) : body.trim();
     await onSend(missionId, finalBody, messageType); 
     setBody('') 
@@ -509,8 +509,8 @@ function MessagesScreen({ messages, missions, onBack, onSend }: { messages: Miss
       </select>
 
       <select value={messageType} onChange={(e) => { setMessageType(e.target.value); setBody(''); }} className="min-h-12 w-full rounded-xl border-2 border-slate-200 bg-white px-4 text-sm mb-4 font-semibold text-bassin">
-        <option value="container">Numéro de conteneur</option>
-        <option value="trailer">Numéro de remorque</option>
+        <option value="container">NumÃ©ro de conteneur</option>
+        <option value="trailer">NumÃ©ro de remorque</option>
         <option value="other">Autre observation</option>
       </select>
       
@@ -560,7 +560,7 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
     setLoading(true); setMsg('')
     try {
       await dataClient.changePin(oldPin, newPin)
-      setMsg('Code PIN modifié avec succès !')
+      setMsg('Code PIN modifiÃ© avec succÃ¨s !')
       setOldPin(''); setNewPin('')
     } catch (err: any) {
       setMsg(err.message || 'Erreur lors du changement de code.')
@@ -571,7 +571,7 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
 
   return (
     <main>
-      <PageTitle title="Paramètres" onBack={onBack} />
+      <PageTitle title="ParamÃ¨tres" onBack={onBack} />
       
       {!isInstalled && (
         <section className="rounded-2xl bg-white p-5 shadow-card mb-4 border border-bassin/20">
@@ -579,11 +579,11 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
           {isIOS ? (
             <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg">
               <p className="font-bold text-slate-800 mb-1">Installer sur iPhone :</p>
-              <p>1. Appuyez sur l'icône <strong>Partager</strong> (en bas de Safari).</p>
-              <p>2. Faites défiler et cliquez sur <strong>"Sur l'écran d'accueil"</strong>.</p>
+              <p>1. Appuyez sur l'icÃ´ne <strong>Partager</strong> (en bas de Safari).</p>
+              <p>2. Faites dÃ©filer et cliquez sur <strong>"Sur l'Ã©cran d'accueil"</strong>.</p>
             </div>
           ) : canInstall ? (
-            <button onClick={promptInstall} className="w-full rounded-xl bg-bassin text-white font-bold py-3 px-4">📲 Installer CargoTraction</button>
+            <button onClick={promptInstall} className="w-full rounded-xl bg-bassin text-white font-bold py-3 px-4">ðŸ“² Installer SOTRIAL</button>
           ) : (
             <p className="text-sm text-slate-500">Ouvrez ce site dans Chrome (Android) ou Safari (iPhone) pour l'installer.</p>
           )}
@@ -591,23 +591,23 @@ function SettingsScreen({ onBack }: { onBack: () => void }) {
       )}
 
       <section className="rounded-2xl bg-white p-5 shadow-card mb-4">
-        <h2 className="text-lg font-extrabold text-slate-900 mb-4 flex items-center gap-2"><Key className="h-5 w-5 text-bassin" /> Sécurité du compte</h2>
+        <h2 className="text-lg font-extrabold text-slate-900 mb-4 flex items-center gap-2"><Key className="h-5 w-5 text-bassin" /> SÃ©curitÃ© du compte</h2>
         <form onSubmit={changePin} className="space-y-4">
           <label className="block"><span className="mb-2 block text-base font-bold text-slate-800">Ancien PIN</span><input type="password" inputMode="numeric" value={oldPin} onChange={(e) => setOldPin(e.target.value.replace(/\D/g, ''))} className="min-h-12 w-full rounded-xl border-2 border-slate-200 px-4 text-lg" /></label>
-          <label className="block"><span className="mb-2 block text-base font-bold text-slate-800">Nouveau PIN (4 à 6 chiffres)</span><input type="password" inputMode="numeric" value={newPin} onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))} className="min-h-12 w-full rounded-xl border-2 border-slate-200 px-4 text-lg" /></label>
-          {msg && <p className={`text-sm font-bold ${msg.includes('succès') ? 'text-emerald-600' : 'text-rose-600'}`}>{msg}</p>}
-          <ActionButton type="submit" disabled={loading} className="w-full">{loading ? 'Enregistrement…' : 'Changer mon code PIN'}</ActionButton>
+          <label className="block"><span className="mb-2 block text-base font-bold text-slate-800">Nouveau PIN (4 Ã  6 chiffres)</span><input type="password" inputMode="numeric" value={newPin} onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))} className="min-h-12 w-full rounded-xl border-2 border-slate-200 px-4 text-lg" /></label>
+          {msg && <p className={`text-sm font-bold ${msg.includes('succÃ¨s') ? 'text-emerald-600' : 'text-rose-600'}`}>{msg}</p>}
+          <ActionButton type="submit" disabled={loading} className="w-full">{loading ? 'Enregistrementâ€¦' : 'Changer mon code PIN'}</ActionButton>
         </form>
       </section>
     <section className="mt-8 border-t border-slate-200 pt-6">
         <button
           onClick={() => {
             localStorage.removeItem('cargotraction_driver');
-            window.location.reload(); // Recharge l'app pour vider la mémoire et afficher le login
+            window.location.reload(); // Recharge l'app pour vider la mÃ©moire et afficher le login
           }}
           className="w-full rounded-xl border-2 border-rose-200 bg-rose-50 py-3 text-base font-bold text-rose-700 hover:bg-rose-100 transition"
         >
-          Se déconnecter
+          Se dÃ©connecter
         </button>
         <p className="text-center text-xs text-slate-400 mt-3">
           Version de l'application : 1.0.0
@@ -648,9 +648,9 @@ export function App() {
   const [syncing, setSyncing] = useState(false)
   const [notice, setNotice] = useState('')
 
-  const refresh = useCallback(async () => { if (!driver) return; try { const [nextMissions, nextMessages] = await Promise.all([dataClient.getMissions(), dataClient.getMessages()]); setMissions(nextMissions); setMessages(nextMessages) } catch { setNotice('Les données ne sont pas disponibles. La file hors ligne reste active.') } }, [driver])
+  const refresh = useCallback(async () => { if (!driver) return; try { const [nextMissions, nextMessages] = await Promise.all([dataClient.getMissions(), dataClient.getMessages()]); setMissions(nextMissions); setMessages(nextMessages) } catch { setNotice('Les donnÃ©es ne sont pas disponibles. La file hors ligne reste active.') } }, [driver])
   const updatePending = useCallback(async () => { try { setPendingCount((await listPendingEvents()).length) } catch { setPendingCount(0) } }, [])
-  const sync = useCallback(async () => { if (!online || syncing) return; setSyncing(true); try { const events = await listPendingEvents(); for (const event of events) { try { await dataClient.submitEvent(event); await removeEvent(event.client_event_id) } catch { break } } await updatePending(); if (events.length) setNotice(`${events.length} action${events.length > 1 ? 's' : ''} synchronisée${events.length > 1 ? 's' : ''}.`) } finally { setSyncing(false) } }, [online, syncing, updatePending])
+  const sync = useCallback(async () => { if (!online || syncing) return; setSyncing(true); try { const events = await listPendingEvents(); for (const event of events) { try { await dataClient.submitEvent(event); await removeEvent(event.client_event_id) } catch { break } } await updatePending(); if (events.length) setNotice(`${events.length} action${events.length > 1 ? 's' : ''} synchronisÃ©e${events.length > 1 ? 's' : ''}.`) } finally { setSyncing(false) } }, [online, syncing, updatePending])
   useEffect(() => { void refresh(); void updatePending() }, [refresh, updatePending])
   useEffect(() => { const on = () => setOnline(true); const off = () => setOnline(false); window.addEventListener('online', on); window.addEventListener('offline', off); return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off) } }, [])
   useEffect(() => { if (online) void sync() }, [online, sync])
@@ -660,7 +660,7 @@ export function App() {
     setDriver(result.driver); 
     localStorage.setItem('cargotraction_driver', JSON.stringify(result.driver));
     
-    setNotice(result.demo ? 'Mode démo actif.' : 'Connexion réussie.') 
+    setNotice(result.demo ? 'Mode dÃ©mo actif.' : 'Connexion rÃ©ussie.') 
   }
   const addEvent = async (eventType: MissionEvent['event_type'], payload: Record<string, unknown>) => { 
     const missionId = selected?.id ?? String(payload.mission_id ?? ''); 
@@ -683,17 +683,17 @@ export function App() {
         await dataClient.submitEvent(event); 
         await removeEvent(event.client_event_id); 
         await updatePending(); 
-        setNotice('Action enregistrée et synchronisée.') 
+        setNotice('Action enregistrÃ©e et synchronisÃ©e.') 
       } catch { 
-        setNotice('Action enregistrée hors ligne.') 
+        setNotice('Action enregistrÃ©e hors ligne.') 
       } 
     } else {
-      setNotice('Hors ligne : action enregistrée.')
+      setNotice('Hors ligne : action enregistrÃ©e.')
     } 
   }
 
 
-  const sendMessage = async (missionId: string, body: string, type: string) => { try { await dataClient.sendMessage(missionId, body, type); setMessages((current) => [...current, { id: makeClientEventId(), mission_id: missionId, sender_role: 'driver', sender_name: 'Vous', body, created_at: new Date().toISOString(), read_at: new Date().toISOString(), message_type: type }]); setNotice('Message envoyé.') } catch { setNotice('Message conservé localement.') } }
+  const sendMessage = async (missionId: string, body: string, type: string) => { try { await dataClient.sendMessage(missionId, body, type); setMessages((current) => [...current, { id: makeClientEventId(), mission_id: missionId, sender_role: 'driver', sender_name: 'Vous', body, created_at: new Date().toISOString(), read_at: new Date().toISOString(), message_type: type }]); setNotice('Message envoyÃ©.') } catch { setNotice('Message conservÃ© localement.') } }
   
   if (!driver) return <LoginView onLogin={login} />
   
